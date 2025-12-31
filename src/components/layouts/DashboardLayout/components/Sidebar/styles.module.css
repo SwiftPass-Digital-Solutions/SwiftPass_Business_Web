@@ -1,0 +1,35 @@
+.wrapper {
+  letter-spacing: 0.02em;
+}
+
+.container {
+  width: 100%;
+}
+
+.icon-wrapper.nav-icon svg path {
+  stroke: #f5f7f9;
+}
+
+.icon-wrapper:hover * {
+  color: #072760;
+}
+
+.icon-wrapper.active.nav-icon svg path,
+.icon-wrapper:hover.nav-icon svg path {
+  stroke: #072760;
+}
+
+.icon-wrapper.active:not(.nav-icon) svg path,
+.icon-wrapper:hover:not(.nav-icon) svg path {
+  fill: #f5f7f9;
+}
+
+@media screen and (min-width: 768px) {
+  .container.open {
+    width: 256px;
+  }
+
+  .container.close {
+    width: 80px;
+  }
+}

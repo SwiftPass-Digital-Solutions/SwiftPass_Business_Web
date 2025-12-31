@@ -1,0 +1,83 @@
+.container {
+  position: relative;
+}
+
+.container input {
+  width: 100%;
+  background-color: var(--app-white);
+  border-radius: 12px;
+  border: 1px solid #e6e6e6;
+  height: 55px;
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  -webkit-appearance: none;
+  appearance: none;
+  text-align: left;
+  align-items: flex-start;
+  /* filter: drop-shadow(0 1px 0px rgba(0, 0, 0, 0.08)); */
+}
+
+.container input::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+.container input::placeholder {
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+.container label {
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 16px;
+  color: #101010;
+}
+
+.container label.active {
+  color: #323232;
+}
+
+.container input:focus {
+  border: 1px solid #323232;
+}
+
+.icon {
+  position: absolute;
+  left: 3%;
+  bottom: 33%;
+  z-index: 1;
+}
+
+@media screen and (min-width: 400px) {
+  /* .container input {
+	} */
+}
+
+.container input:focus {
+  outline: none;
+}
+
+.container.padding-right input {
+  padding-right: 14%;
+}
+
+.container span {
+  position: absolute;
+  right: 5%;
+  top: 40px;
+}
+
+.container.error input {
+  border: 1px solid var(--app-red-400);
+}
+
+.error-message {
+  font-weight: 400;
+  margin-top: 3px;
+  color: var(--app-red-400);
+  font-size: 0.8rem;
+}
+
+.icon-disabled svg path {
+  fill: #9693a2;
+}

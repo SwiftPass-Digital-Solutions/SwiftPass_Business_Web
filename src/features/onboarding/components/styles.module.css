@@ -1,0 +1,89 @@
+.container {
+  position: relative;
+}
+
+.container a {
+  font-size: inherit;
+  /* text-decoration: underline; */
+  font-weight: 500;
+  color: var(--app-primary-500) !important;
+}
+
+.container a.no-otp {
+  color: var(--app-gray-200) !important;
+}
+
+.otp-input input {
+  width: 44px !important;
+  height: 44px !important;
+  background: #ffffff;
+  border: 1px solid #e6e6e6;
+  border-radius: 12px;
+  font-weight: 500;
+  font-size: inherit;
+  line-height: 36px;
+}
+
+.otp-input.error input {
+  border-color: var(--app-red-400);
+}
+
+.otp-input input:focus {
+  color: #3da0f1;
+  outline: #3da0f1;
+  border: 1px solid #3da0f1;
+}
+
+.error-message {
+  font-weight: 400;
+  margin-top: 3px;
+  color: var(--app-red-400);
+  font-size: 0.8rem;
+}
+
+@media all and (min-width: 768px) {
+  .container {
+  }
+
+  .otp-input input {
+    width: 56px !important;
+    height: 56px !important;
+  }
+}
+
+@media all and (min-width: 992px) {
+}
+
+@media all and (min-width: 1024px) {
+}
+
+@media all and (min-width: 1200px) {
+}
+
+@media all and (min-width: 1280px) {
+}
+
+@media all and (max-width: 767px) {
+}
+
+@media all and (max-width: 500px) {
+  .otp-input {
+    width: 44px !important;
+    height: 44px !important;
+  }
+
+  .otp-input input {
+    font-size: 20px;
+    line-height: 25px;
+  }
+}
+
+@media screen and (max-width: 320px) {
+  .otp-input {
+    max-width: 16% !important;
+  }
+
+  .otp-input input {
+    max-width: 100% !important;
+  }
+}
