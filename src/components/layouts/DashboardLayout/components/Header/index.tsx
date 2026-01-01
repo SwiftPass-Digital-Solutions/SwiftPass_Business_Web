@@ -3,17 +3,17 @@ import styles from "./styles.module.css";
 import { capitalizeFirstLetter } from "@/utils";
 import { Menu } from "lucide-react";
 import { useLocation } from "react-router";
-import { NAV_HEADER } from "@/constants";
+import { NAV_DESCRIPTION, NAV_HEADER } from "@/constants";
 import { NotificationBell } from "@/assets/svgs";
 
-type NavHeaderKey = keyof typeof NAV_HEADER;
+type NavDescKey = keyof typeof NAV_DESCRIPTION;
 
 const Header: FC<{
   sideNavIsOpen?: boolean;
   handleToggleDrawer: () => void;
 }> = ({ sideNavIsOpen, handleToggleDrawer }) => {
   const { pathname } = useLocation();
-  const title = (pathname?.split("/")[1] as NavHeaderKey) || "";
+  const title = (pathname?.split("/")[1] as NavDescKey ) || "";
   return (
     <div
       className={`${styles["wrapper"]} font-archivo z-10 sticky top-0 bg-white`}
@@ -21,25 +21,31 @@ const Header: FC<{
       <header
         className={`${styles.container} ${
           styles.nav
-        } px-8 mt-15 flex justify-between items-center gap-3 md:gap-6 ${
+        } px-8 mt-6 md:mt-15 flex justify-between items-center gap-3 md:gap-6 ${
           !sideNavIsOpen && ""
         }`}
       >
         <div className="flex items-center gap-4">
           <button
             type="button"
-            className="p-2 text-gray-800 dark:text-white md:hidden"
+            className="p-2 text-gray-800 dark:text-white md:hidden border border-[#EEEEEE] rounded-lg"
             onClick={handleToggleDrawer}
           >
-            <Menu stroke="#000000" />
+            <Menu stroke="#292D32" />
           </button>
           <div className="">
-            <p className="text-[#030303] text-xl md:text-[22px] font-semibold">
-              {capitalizeFirstLetter(title.replace("-", " "))}
+            <p className="text-[#030303] block md:hidden text-xl md:text-[22px] font-medium">
+              {capitalizeFirstLetter(title.replace("-", " ")) === "Dashboard" &&
+                "Overview"}
             </p>
-            <p className="text-base text-[#737373] font-normal">
-              {NAV_HEADER[title]}
-            </p>
+            <div className="hidden md:block">
+              <p className="text-[#030303] text-xl md:text-[22px] font-medium">
+                {NAV_HEADER[title]}
+              </p>
+              <p className="text-base text-[#737373] font-normal">
+                {NAV_DESCRIPTION[title]}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -50,7 +56,16 @@ const Header: FC<{
         </div>
       </header>
 
-      <hr className="mx-8 border border-[#EEEEEE] mt-4" />
+      <div className="block md:hidden mx-8 mt-6">
+        <p className="text-[#030303] text-xl font-medium">
+          {NAV_HEADER[title]}
+        </p>
+        <p className="text-sm text-[#737373] font-normal">
+          {NAV_DESCRIPTION[title]}
+        </p>
+      </div>
+
+      <hr className="mx-8 border border-[#EEEEEE] md:mt-4 hidden md:block" />
     </div>
   );
 };

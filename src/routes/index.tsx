@@ -30,6 +30,9 @@ const UploadDocs = lazy(
 const Dashboard = lazy(
   () => import("../features/dashboard/components/Dashboard")
 );
+const Compliance = lazy(
+  () => import("../features/compliance/components/Compliance")
+);
 
 const AppRoutes = () => {
   const { loggedIn } = useAppSelector((state) => state.auth);
@@ -51,6 +54,7 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoutes authenticated={true} />}>
           <Route element={<DashboardLayout />}>
             <Route path={APP_PATHS.DASHBOARD} element={<Dashboard />} />
+            <Route path={APP_PATHS.COMPLIANCE} element={<Compliance />} />
           </Route>
         </Route>
       </Routes>

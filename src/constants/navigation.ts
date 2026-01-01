@@ -16,7 +16,7 @@ export const dashboardNavigation = [
   },
   {
     title: "Compliance",
-    url: "#",
+    url: APP_PATHS.COMPLIANCE,
     icon: Compliance,
   },
   {
