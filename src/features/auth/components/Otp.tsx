@@ -12,7 +12,7 @@ const Otp = () => {
 
   const verifyFormik = useFormik({
     initialValues,
-    onSubmit: async (values) => {
+    onSubmit: async () => {
       //   try {
       // const response = await triggerVerify({
       //       email: state?.email,
@@ -33,7 +33,7 @@ const Otp = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   return (
-    <div className="w-full h-screen grid grid-cols-2 font-archivo overflow-hidden">
+    <div className="w-full h-screen grid grid-cols-1 md:grid-cols-2 font-archivo overflow-hidden">
       <div className="col-span-1 flex flex-col justify-center w-full h-full mx-auto py-7 pl-20 pr-12 bg-white rounded-2xl text-[#555555]">
         <SwiftPassLogo />
 
@@ -76,7 +76,7 @@ const Otp = () => {
           </div>
           <div>
             <p>
-              Didn’t receive a code?{" "}
+              Didn't receive a code?{" "}
               <span>
                 <a href="">Resend</a>
               </span>{" "}
@@ -91,16 +91,14 @@ const Otp = () => {
         </div>
       </div>
 
-      <div className="col-span-1 h-full px-16 py-10.5">
+      <div className="col-span-1 h-full px-16 py-10.5 hidden md:block">
         <div
-          className="w-full h-full flex justify-end bg-white"
+          className="w-full h-full bg-white"
           style={{
             backgroundImage: `url('/src/assets/pngs/onboarding-hero.png')`,
-            backgroundSize: "contain",
+            backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
-            backgroundPositionX: "right",
-            // height: "740px",
-            // width: "987px",
+            backgroundPosition: "right center",
           }}
         />
       </div>

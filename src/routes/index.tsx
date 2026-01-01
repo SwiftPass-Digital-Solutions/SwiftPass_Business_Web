@@ -27,6 +27,9 @@ const CreateAccount = lazy(
 const UploadDocs = lazy(
   () => import("../features/onboarding/components/UploadDocs")
 );
+const Dashboard = lazy(
+  () => import("../features/dashboard/components/Dashboard")
+);
 
 const AppRoutes = () => {
   const { loggedIn } = useAppSelector((state) => state.auth);
@@ -34,7 +37,7 @@ const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>
-        <Route path={APP_PATHS.HOME} element={<Login />} />
+        <Route path={APP_PATHS.LOGIN} element={<Login />} />
         <Route path={APP_PATHS.FORGOT_PASSWORD} element={<ForgotPassword />} />
         <Route path={APP_PATHS.OTP} element={<Otp />} />
         <Route path={APP_PATHS.ONBOARDING_OTP} element={<OnboardingOtp />} />
@@ -46,7 +49,9 @@ const AppRoutes = () => {
         />
         <Route path={APP_PATHS.REGISTRATION} element={<Registration />} />
         <Route element={<ProtectedRoutes authenticated={true} />}>
-          <Route element={<DashboardLayout />}></Route>
+          <Route element={<DashboardLayout />}>
+            <Route path={APP_PATHS.DASHBOARD} element={<Dashboard />} />
+          </Route>
         </Route>
       </Routes>
     </Suspense>

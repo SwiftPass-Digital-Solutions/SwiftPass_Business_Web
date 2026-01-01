@@ -2,15 +2,17 @@ export * from "./api";
 export * from "./mocks";
 
 export const APP_PATHS = {
-  HOME: "/",
+  LOGIN: "/",
   FORGOT_PASSWORD: "/forgot-password",
   OTP: "/otp",
   CONFIRM_PASSWORD: "/confirm-password",
-  DASHBOARD: "/dashboard",
   REGISTRATION: "/onboarding/registration",
   ONBOARDING_OTP: "/onboarding/otp",
   CREATE_ACCOUNT: "/onboarding/create-account",
   UPLOAD_DOCS: "/onboarding/upload-docs",
+
+  // dashboards
+  DASHBOARD: "/dashboard",
 };
 
 export const MAX_COOKIES_AGE = 3600 * 24;
@@ -24,7 +26,8 @@ export enum DocTypes {
 }
 
 export const NAV_HEADER = {
-  dashboard: "Real-time metrics and SLA overview",
+  dashboard:
+    "You're almost ready to go live. Complete your onboarding to unlock full access",
   "knowledge-base": "Internal wiki and support documentation",
   tickets: "Open tickets requiring attention",
   reports: "CSAT, NPS and performance analytics",

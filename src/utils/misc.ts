@@ -84,7 +84,7 @@ export const handleLogoutRedirect = () => {
   if (typeof window !== "undefined") {
     expireCookie("_tk");
     expireCookie("_ar");
-    window.location.replace(APP_PATHS.HOME);
+    window.location.replace(APP_PATHS.LOGIN);
   }
 };
 

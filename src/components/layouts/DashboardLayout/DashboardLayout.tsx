@@ -30,7 +30,7 @@ const DashboardLayout = () => {
           />
           <motion.div
             transition={{ delay: 100 }}
-            className={`${styles["container"]} grow flex flex-col  ml-auto z-10 relative max-w-full md:max-w-[calc(100%-var(--sidebar-width))]`}
+            className={`${styles["container"]} grow flex flex-col ml-auto z-10 relative max-w-full md:max-w-[calc(100%-var(--sidebar-width))]`}
             style={
               { "--sidebar-width": `${sideBarWidth}px` } as React.CSSProperties
             }

@@ -1,39 +1,38 @@
-import { APP_PATHS } from "@/constants";
 import {
-  BookOpen,
-  ChartNoAxesCombined,
-  LayoutDashboard,
+  ApiCredit,
+  Compliance,
+  Customers,
+  Dashboard,
+  Reports,
   Settings,
-  TagIcon,
-  Users,
-} from "lucide-react";
+} from "@/assets/svgs";
+import { APP_PATHS } from "@/constants";
 
 export const dashboardNavigation = [
   {
     title: "Dashboard",
     url: APP_PATHS.DASHBOARD,
-    icon: LayoutDashboard,
+    icon: Dashboard,
   },
   {
-    title: "Tickets",
-    url: APP_PATHS.TICKETS,
-    icon: TagIcon,
+    title: "Compliance",
+    url: "#",
+    icon: Compliance,
   },
   {
     title: "Customers",
-    url: APP_PATHS.CUSTOMERS,
-    icon: Users,
-  },
-
-  {
-    title: "Knowledge Base",
     url: "#",
-    icon: BookOpen,
+    icon: Customers,
+  },
+  {
+    title: "API & Credits",
+    url: "#",
+    icon: ApiCredit,
   },
   {
     title: "Reports",
     url: "#",
-    icon: ChartNoAxesCombined,
+    icon: Reports,
   },
   {
     title: "Settings",
