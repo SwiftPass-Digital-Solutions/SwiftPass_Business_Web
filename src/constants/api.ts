@@ -17,4 +17,11 @@ export const endpoints = {
   auth: {
     login: "/auth/login",
   },
+  identity: {
+    initiate: "/identity/business/initiate",
+    businessTypes: "/identity/business/business-types",
+    verifyOtp: "/identity/business/verify-otp",
+    resendOtp: (email: string) =>
+      `/identity/business/resend-email-otp/?email=${email}`,
+  },
 };

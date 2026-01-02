@@ -1,1 +1,2 @@
-export * from "./confirm-password";
+export * from "./confirm-password.validation";
+export * from "./initiate.validation";

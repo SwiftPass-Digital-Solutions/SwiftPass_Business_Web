@@ -1,5 +1,11 @@
 import { APP_PATHS, MAX_COOKIES_AGE } from "@/constants";
 import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(duration);
+dayjs.extend(utc);
+
+export { dayjs as dayJs };
 
 export const getCookie = (name: string) => {
   try {
@@ -63,6 +69,7 @@ export const getErrorMessage = (error: any): string => {
     (typeof error?.response?.data === "string"
       ? error?.response?.data || error?.response?.statusText
       : error?.response?.data?.message) ||
+    error.error.message ||
     error.message ||
     "An unknown error occurred"
   );
