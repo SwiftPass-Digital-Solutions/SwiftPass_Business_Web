@@ -1,7 +1,7 @@
 import { SwiftPassLogo } from "@/assets/svgs";
 import { Button, Input } from "@/components";
 import { useFormik } from "formik";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import OtpInput from "react-otp-input";
 import styles from "./styles.module.css";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -21,6 +21,10 @@ const Otp = () => {
   const [triggerVerify, { isLoading }] = useVerifyOtpMutation();
   const [triggerResend, { isLoading: resendLoading }] = useResendOtpMutation();
 
+  const [trackingId, setTrackingId] = useState<string | undefined>(
+    state?.trackingId
+  );
+
   const {
     startCountdown: startOtpCountdown,
     setStartCountdown: setStartOtpCountdown,
@@ -35,7 +39,7 @@ const Otp = () => {
         const response = await triggerVerify({
           email: state?.contactEmail,
           otp: values?.otp,
-          trackingId: state?.trackingId,
+          trackingId: trackingId,
         }).unwrap();
         if (response?.status) {
           navigate(APP_PATHS.CREATE_ACCOUNT, {
@@ -59,6 +63,7 @@ const Otp = () => {
       }).unwrap();
       if (response?.status) {
         toast.success(response?.message);
+        setTrackingId(response?.data?.trackingId);
         restartOtpCountdown();
       } else {
         const message = getErrorMessage(response);

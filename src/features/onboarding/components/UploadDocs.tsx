@@ -1,7 +1,13 @@
 import { SwiftPassLogo } from "@/assets/svgs";
 import { Button, UploadBox } from "@/components";
+import { useUploadDocsMutation } from "@/services";
 import { useFormik } from "formik";
-import { useState } from "react";
+import {  useMemo, useState } from "react";
+import { useBusinessCategory } from "../hooks";
+import { APP_PATHS } from "@/constants";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { getErrorMessage } from "@/utils";
 
 const initialValues = {
   cac: "",
@@ -15,20 +21,88 @@ type FormKeys = keyof typeof initialValues;
 const STEPS: readonly { key: FormKeys; label: string }[] = [
   { key: "cac", label: "Corporate Registration (CAC Certificate)" },
   { key: "tin", label: "Tax Compliance (TIN Certificate)" },
-  { key: "id", label: "Directors’ IDs (NIN, Passport, Driver’s License)" },
+  { key: "id", label: "Directors' IDs (NIN, Passport, Driver's License)" },
   {
     key: "licenses",
     label: "Licenses (SCUML, Industry License if applicable)",
   },
 ];
 
+type CategoryName =
+  | "CorporateRegistration"
+  | "TaxCompliance"
+  | "DirectorId"
+  | "License";
+
+const STEP_TO_CATEGORY_MAP: Record<FormKeys, CategoryName> = {
+  cac: "CorporateRegistration",
+  tin: "TaxCompliance",
+  id: "DirectorId",
+  licenses: "License",
+};
+
 const UploadDocs = () => {
+  const navigate = useNavigate();
+  const { state } = useLocation();
   const [stepIndex, setStepIndex] = useState(0);
+  const [triggerUpload, { isLoading }] = useUploadDocsMutation();
+  const { businessCategories, loading } = useBusinessCategory();
+
   const currentStep = STEPS[stepIndex]!;
+
+  const getCategoryFromStep = (stepKey: FormKeys) => {
+    return STEP_TO_CATEGORY_MAP[stepKey];
+  };
+
+  const currentCategory = useMemo(() => {
+    if (!currentStep) return null;
+    return getCategoryFromStep(currentStep.key);
+  }, [currentStep]);
+
+  const availableSubCategories = useMemo(
+    () =>
+      businessCategories
+        ?.find((category) => category?.categoryName === currentCategory)
+        ?.subCategories?.map((subcategory) => ({
+          label: subcategory?.subCategoryDisplayName,
+          value: subcategory?.subCategoryId,
+        })) ?? [],
+    [currentCategory, businessCategories]
+  );
+
+  console.log(currentCategory);
+  console.log(availableSubCategories);
 
   const formik = useFormik({
     initialValues,
-    onSubmit: () => {},
+    onSubmit: async (value) => {
+      try {
+        const category = getCategoryFromStep(currentStep.key);
+
+        const payload = {
+          email: state?.contactEmail,
+          documentCategory: category,
+          documentSubType: null,
+          file: value[currentStep.key as FormKeys],
+        };
+
+        const response = await triggerUpload(payload).unwrap();
+        if (response?.status) {
+          toast.success(response?.message || "Document uploaded successfully");
+          if (stepIndex < STEPS.length - 1) {
+            setStepIndex((prev) => prev + 1);
+          } else {
+            navigate(APP_PATHS.LOGIN);
+          }
+        } else {
+          const message = getErrorMessage(response);
+          toast.error(response?.message || message);
+        }
+      } catch (error) {
+        const message = getErrorMessage(error);
+        toast.error(message || "An error occurred. Please try again.");
+      }
+    },
   });
 
   const handleNext = () => {
@@ -45,9 +119,11 @@ const UploadDocs = () => {
     }
   };
 
+  const { dirty, isValid } = formik;
+
   return (
     <div className="w-full h-screen grid grid-cols-1 md:grid-cols-2 font-archivo overflow-hidden">
-      <div className="col-span-1 flex flex-col justify-center w-full h-full mx-auto py-7 pl-20 pr-12 bg-white rounded-2xl text-[#555555]">
+      <div className="col-span-1 flex flex-col md:justify-center w-full h-full mx-auto py-7 md:pl-20 pl-4 md:pr-12 pr-4 bg-white rounded-2xl text-[#555555]">
         <SwiftPassLogo />
 
         <div className="space-y-1 mt-8">
@@ -71,7 +147,7 @@ const UploadDocs = () => {
             onFile={(imgUrl) => formik.setFieldValue(currentStep.key, imgUrl)}
             shape="rect"
             holderShape="rectangle"
-            accept="PNG, JPEG"
+            accept=".png,.jpeg, .jpg"
             maxSize={1024}
             returnFile
             trim={false}
@@ -94,15 +170,20 @@ const UploadDocs = () => {
             text={stepIndex === STEPS.length - 1 ? "Submit" : "Next"}
             className="w-full!"
             onClick={handleNext}
+            loading={isLoading}
+            disabled={!(isValid && dirty) || isLoading}
           />
         </div>
 
         <div className="mt-8">
           <p className="text-[#555555]">
             Want to upload this later?{" "}
-            <a href="" className="text-primary">
+            <button
+              onClick={() => navigate(APP_PATHS.LOGIN)}
+              className="text-primary bg-transparent border-none cursor-pointer"
+            >
               Skip...
-            </a>
+            </button>
           </p>
         </div>
       </div>

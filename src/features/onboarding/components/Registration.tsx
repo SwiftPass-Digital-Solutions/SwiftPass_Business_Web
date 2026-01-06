@@ -44,6 +44,9 @@ const Registration = () => {
           navigate(APP_PATHS.ONBOARDING_OTP, {
             state: { ...values, ...response.data },
           });
+        } else {
+          const message = getErrorMessage(response);
+          toast.error(response?.message || message);
         }
       } catch (error) {
         const message = getErrorMessage(error);

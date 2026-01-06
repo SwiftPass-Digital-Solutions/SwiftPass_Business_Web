@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import styles from "./styles.module.css";
 import { motion } from "framer-motion";
-import { logout, toggleSideBar, useAppDispatch } from "@/store";
+import { logout, toggleSideBar, useAppDispatch, useAppSelector } from "@/store";
 import { SidebarItemWrapper } from "./SidebarItemWrapper";
 import { dashboardNavigation } from "@/constants/navigation";
 import { handleLogoutRedirect } from "@/utils";
@@ -9,6 +9,8 @@ import { ChevronLeft } from "lucide-react";
 import { APP_PATHS } from "@/constants";
 import { Link } from "react-router";
 import { SwiftPassLogo } from "@/assets/svgs";
+import { Button } from "@/components/shared";
+import { Avatar } from "@/assets/pngs";
 
 export interface INavItem {
   title: string;
@@ -26,6 +28,7 @@ const SidebarContent: React.FC<{
   className?: string;
 }> = ({ isOpen, className = "" }) => {
   const dispatch = useAppDispatch();
+  const { businessName, email } = useAppSelector((state) => state.auth);
 
   const dashboardPaths: INavItem[] = useMemo(() => {
     return dashboardNavigation || [];
@@ -48,7 +51,9 @@ const SidebarContent: React.FC<{
   }, [dispatch]);
 
   return (
-    <div className={`${styles["wrapper"]} flex flex-col h-full min-h-screen`}>
+    <div
+      className={`${styles["wrapper"]} flex font-archivo flex-col h-full min-h-screen`}
+    >
       <motion.div
         className={`${styles["container"]} ${
           isOpen ? styles["open"] : styles["close"]
@@ -101,7 +106,26 @@ const SidebarContent: React.FC<{
             />
           ))}
         </div>
-        <div className="md:mt-5 space-y-4 md:pt-5 pb-2 px-4 py-2"></div>
+        <div
+          className={`md:mt-5 space-y-4 ${
+            isOpen ? "mx-8 py-3.5 px-3" : "hidden"
+          }`}
+        >
+          <div className="p-4 bg-primary border border-[#6D88F4] rounded-xl text-white text-xs text-center">
+            <div className="flex justify-center mb-4">
+              <img src={Avatar} width={64} height={64} alt="" />
+            </div>
+            <h3 className="text-lg font-medium">{businessName}</h3>
+            <p>{email}</p>
+            <div className="mt-4">
+              <Button
+                variant="outlined"
+                text="Upload documents"
+                textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
+              />
+            </div>
+          </div>
+        </div>
       </motion.div>
     </div>
   );

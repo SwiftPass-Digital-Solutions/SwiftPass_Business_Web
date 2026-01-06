@@ -3,20 +3,49 @@ import { Button, Input } from "@/components";
 import { confirmPasswordSchema } from "@/validations";
 import { useFormik } from "formik";
 import { CheckItem } from "./CheckItem";
+import { useLocation, useNavigate } from "react-router-dom";
+import { usePasswordResetMutation } from "@/services";
+import { toast } from "react-toastify";
+import { APP_PATHS } from "@/constants";
+import { getErrorMessage } from "@/utils";
+
+const initialValues = {
+  password: "",
+  password2: "",
+};
 
 const ConfirmPassword = () => {
-  const initialValues = {
-    password: "",
-    password2: "",
-  };
+  const navigate = useNavigate();
+  const { state } = useLocation();
+
+  const [triggerReset, { isLoading }] = usePasswordResetMutation();
 
   const formik = useFormik({
     initialValues,
-    onSubmit: () => {},
+    onSubmit: async (values) => {
+      try {
+        const payload = {
+          email: state?.email,
+          token: state?.token,
+          password: values?.password,
+        };
+        const response = await triggerReset(payload).unwrap();
+        if (response?.status) {
+          toast.success(response?.message || "Password reset successfully");
+          navigate(APP_PATHS.LOGIN);
+        } else {
+          const message = getErrorMessage(response);
+          toast.error(message);
+        }
+      } catch (error: any) {
+        const message = getErrorMessage(error);
+        toast.error(message || "Something went wrong, try again");
+      }
+    },
     validationSchema: confirmPasswordSchema,
   });
 
-  const { values } = formik;
+  const { values, handleSubmit, dirty, isValid } = formik;
 
   const password = values.password;
 
@@ -30,7 +59,7 @@ const ConfirmPassword = () => {
 
   return (
     <div className="w-full h-screen grid grid-cols-1 md:grid-cols-2 font-archivo overflow-hidden">
-      <div className="col-span-1 flex flex-col justify-center w-full h-full mx-auto py-7 pl-20 pr-12 bg-white rounded-2xl text-[#222222]">
+      <div className="col-span-1 flex flex-col md:justify-center w-full h-full mx-auto py-7 md:pl-20 pl-4 md:pr-12 pr-4 bg-white rounded-2xl text-[#555555]">
         <SwiftPassLogo />
 
         <div className="space-y-1 mt-8">
@@ -78,8 +107,19 @@ const ConfirmPassword = () => {
         </div>
 
         <div className="mt-12.5 flex gap-3 items-center">
-          <Button variant="outlined" text="Back" className="w-full!" />
-          <Button text="Create my account" className="w-full!" />
+          <Button
+            variant="outlined"
+            text="Back"
+            onClick={() => navigate(-1)}
+            className="w-full!"
+          />
+          <Button
+            text="Create my account"
+            onClick={handleSubmit}
+            className="w-full!"
+            loading={isLoading}
+            disabled={!(dirty && isValid) || isLoading}
+          />
         </div>
       </div>
 

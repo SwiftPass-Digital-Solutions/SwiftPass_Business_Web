@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 const useBusinessTypes = () => {
   const { pathname } = useLocation();
 
-  const { data, isFetching, isLoading, error, refetch, isError } =
+  const { data, isLoading, error, refetch, isError } =
     useBusinessTypesQuery(undefined, {
       refetchOnMountOrArgChange: true,
       skip: pathname !== "/onboarding/registration",

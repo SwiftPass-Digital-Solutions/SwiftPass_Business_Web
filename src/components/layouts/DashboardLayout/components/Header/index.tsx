@@ -5,15 +5,34 @@ import { Menu } from "lucide-react";
 import { useLocation } from "react-router";
 import { NAV_DESCRIPTION, NAV_HEADER } from "@/constants";
 import { NotificationBell } from "@/assets/svgs";
+import { useAppSelector } from "@/store";
 
 type NavDescKey = keyof typeof NAV_DESCRIPTION;
+type NavHeaderType = {
+  [key: string]: string | ((businessName: string) => string);
+};
 
 const Header: FC<{
   sideNavIsOpen?: boolean;
   handleToggleDrawer: () => void;
 }> = ({ sideNavIsOpen, handleToggleDrawer }) => {
   const { pathname } = useLocation();
-  const title = (pathname?.split("/")[1] as NavDescKey ) || "";
+  const title = (pathname?.split("/")[1] as NavDescKey) || "";
+  const { businessName } = useAppSelector((state) => state.auth);
+
+  // Example: get header text
+  const getHeaderText = () => {
+    const header = NAV_HEADER[title];
+
+    if (!header) return "";
+
+    if (typeof header === "function") {
+      return header(businessName || "");
+    }
+
+    return header;
+  };
+
   return (
     <div
       className={`${styles["wrapper"]} font-archivo z-10 sticky top-0 bg-white`}
@@ -40,7 +59,7 @@ const Header: FC<{
             </p>
             <div className="hidden md:block">
               <p className="text-[#030303] text-xl md:text-[22px] font-medium">
-                {NAV_HEADER[title]}
+                {getHeaderText()}
               </p>
               <p className="text-base text-[#737373] font-normal">
                 {NAV_DESCRIPTION[title]}
@@ -57,9 +76,7 @@ const Header: FC<{
       </header>
 
       <div className="block md:hidden mx-8 mt-6">
-        <p className="text-[#030303] text-xl font-medium">
-          {NAV_HEADER[title]}
-        </p>
+        <p className="text-[#030303] text-xl font-medium">{getHeaderText()}</p>
         <p className="text-sm text-[#737373] font-normal">
           {NAV_DESCRIPTION[title]}
         </p>

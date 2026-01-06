@@ -15,7 +15,11 @@ export const REQUEST_METHODS = {
 
 export const endpoints = {
   auth: {
-    login: "/auth/login",
+    login: "/identity/business/login",
+    forgotPassword: (email: string) =>
+      `/identity/business/forgot-password?email=${email}`,
+    verifyForgotPasswordOtp: "/identity/business/forgot-password/verify-otp",
+    passwordReset: "/identity/business/forgot-password/reset",
   },
   identity: {
     initiate: "/identity/business/initiate",
@@ -23,5 +27,8 @@ export const endpoints = {
     verifyOtp: "/identity/business/verify-otp",
     resendOtp: (email: string) =>
       `/identity/business/resend-email-otp/?email=${email}`,
+    setPassword: "/identity/business/set-password",
+    uploadDocuments: "/identity/business/upload-document",
+    documentCategories: "/identity/business/document-categories",
   },
 };

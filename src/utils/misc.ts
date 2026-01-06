@@ -56,21 +56,13 @@ export const capitalizeStrings = (value = "") => {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getErrorMessage = (error: any): string => {
-  // Handle field-level validation errors
-  const fieldErrors = error?.response?.data?.errors || error?.errors;
-  if (fieldErrors && typeof fieldErrors === "object") {
-    const messages = Object.values(fieldErrors).flat().filter(Boolean);
-    if (messages.length > 0) {
-      return messages.join(" ");
-    }
-  }
   return (
     error?.response?.data?.title ||
     (typeof error?.response?.data === "string"
       ? error?.response?.data || error?.response?.statusText
       : error?.response?.data?.message) ||
-    error.error.message ||
-    error.message ||
+    error?.data?.message ||
+    error?.message ||
     "An unknown error occurred"
   );
 };

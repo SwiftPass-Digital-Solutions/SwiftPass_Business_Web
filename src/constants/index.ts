@@ -42,7 +42,7 @@ export const NAV_DESCRIPTION = {
 };
 
 export const NAV_HEADER = {
-  dashboard: "Welcome to SwiftPass, Kems Business!",
+  dashboard: (businessName: string) => `Welcome to SwiftPass, ${businessName}!`,
   "knowledge-base": "Internal wiki and support documentation",
   compliance: "Stay compliant. Stay trusted.",
   customers: "Manage all customers onboarded through SwiftPass",

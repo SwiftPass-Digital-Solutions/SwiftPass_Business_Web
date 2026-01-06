@@ -1,11 +1,58 @@
 import { SwiftPassLogo } from "@/assets/svgs";
 import { Button, Input } from "@/components";
 import { APP_PATHS } from "@/constants";
+import { useLoginMutation } from "@/services";
+import { loginSuccess, useAppDispatch } from "@/store";
+import { getErrorMessage, setCookie } from "@/utils";
+import { loginValidationSchema } from "@/validations";
+import { useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+const initialValues = {
+  email: "",
+  password: "",
+};
 
 const Login = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [triggerLogin, { isLoading }] = useLoginMutation();
+
+  const loginFormik = useFormik({
+    initialValues,
+    onSubmit: async (values) => {
+      try {
+        const response = await triggerLogin(values).unwrap();
+        if (response?.status) {
+          dispatch(
+            loginSuccess({
+              email: response?.data?.email,
+              firstName: response?.data?.firstName,
+              lastName: response?.data?.lastName,
+              businessName: response?.data?.businessName,
+              userType: response?.data?.userType,
+            })
+          );
+          setCookie("_tk", response?.data?.token);
+          navigate(APP_PATHS.DASHBOARD);
+        } else {
+          const message = getErrorMessage(response);
+          toast.error(message);
+        }
+      } catch (error) {
+        const message = getErrorMessage(error);
+        toast.error(message || "Something went wrong, try again");
+      }
+    },
+    validationSchema: loginValidationSchema,
+  });
+
+  const { handleSubmit, dirty, isValid } = loginFormik;
+
   return (
     <div className="w-full h-screen grid grid-cols-1 md:grid-cols-2 font-archivo overflow-hidden">
-      <div className="col-span-1 flex flex-col justify-center h-full overflow-y-auto w-full mx-auto py-7 md:pl-20 pl-4 md:pr-12 pr-4 bg-white rounded-2xl text-[#222222]">
+      <div className="col-span-1 flex flex-col md:justify-center w-full h-full mx-auto py-7 md:pl-20 pl-4 md:pr-12 pr-4 bg-white rounded-2xl text-[#555555]">
         <SwiftPassLogo />
 
         <div className="space-y-1 mt-8">
@@ -21,6 +68,7 @@ const Login = () => {
               name="email"
               label="Email address"
               placeholder="Enter your email"
+              formik={loginFormik}
             />
           </div>
           <div className="space-y-3">
@@ -29,6 +77,7 @@ const Login = () => {
               type="password"
               label="Password"
               placeholder="Enter password"
+              formik={loginFormik}
             />
             <a
               href={APP_PATHS.FORGOT_PASSWORD}
@@ -40,7 +89,13 @@ const Login = () => {
         </div>
 
         <div className="mt-12.5">
-          <Button text="Login" className="w-full!" />
+          <Button
+            text="Login"
+            className="w-full!"
+            loading={isLoading}
+            disabled={!(isValid && dirty) || isLoading}
+            onClick={handleSubmit}
+          />
         </div>
 
         <div>
