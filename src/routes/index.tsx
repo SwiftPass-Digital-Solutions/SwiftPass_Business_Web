@@ -51,7 +51,7 @@ const AppRoutes = () => {
           element={<ConfirmPassword />}
         />
         <Route path={APP_PATHS.REGISTRATION} element={<Registration />} />
-        <Route element={<ProtectedRoutes authenticated={true} />}>
+        <Route element={<ProtectedRoutes authenticated={loggedIn} />}>
           <Route element={<DashboardLayout />}>
             <Route path={APP_PATHS.DASHBOARD} element={<Dashboard />} />
             <Route path={APP_PATHS.COMPLIANCE} element={<Compliance />} />

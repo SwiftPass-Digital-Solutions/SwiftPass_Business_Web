@@ -50,7 +50,7 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
       accept = ".jpg,.png,.jpeg",
       onFile,
       shape,
-      holderShape = null,
+      // holderShape = null,
       trim = true,
       disabled = false,
       maxSize = 500,
@@ -71,7 +71,7 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
     const [fileSizeError, setFileSizeError] = useState(false);
     const [error, setError] = useState("");
     const [isDragging, setIsDragging] = useState<boolean>(false);
-    const [fileName, setFileName] = useState<string | null>(null);
+    const [, setFileName] = useState<string | null>(null);
 
     const choosePicture = useRef<any>(null);
     // const cropperRef = useRef(null);

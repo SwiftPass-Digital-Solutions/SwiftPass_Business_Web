@@ -1,10 +1,9 @@
 import React, { useCallback, useMemo } from "react";
 import styles from "./styles.module.css";
 import { motion } from "framer-motion";
-import { logout, toggleSideBar, useAppDispatch, useAppSelector } from "@/store";
+import { toggleSideBar, useAppDispatch, useAppSelector } from "@/store";
 import { SidebarItemWrapper } from "./SidebarItemWrapper";
 import { dashboardNavigation } from "@/constants/navigation";
-import { handleLogoutRedirect } from "@/utils";
 import { ChevronLeft } from "lucide-react";
 import { APP_PATHS } from "@/constants";
 import { Link } from "react-router";
@@ -39,16 +38,16 @@ const SidebarContent: React.FC<{
     [dispatch]
   );
 
-  const handleLogout = useCallback(async () => {
-    try {
-      dispatch(logout());
-      handleLogoutRedirect();
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      dispatch(logout());
-      handleLogoutRedirect();
-    }
-  }, [dispatch]);
+  // const handleLogout = useCallback(async () => {
+  //   try {
+  //     dispatch(logout());
+  //     handleLogoutRedirect();
+  //     // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //   } catch (error) {
+  //     dispatch(logout());
+  //     handleLogoutRedirect();
+  //   }
+  // }, [dispatch]);
 
   return (
     <div

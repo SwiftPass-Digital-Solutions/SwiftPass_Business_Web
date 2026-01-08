@@ -102,6 +102,7 @@ export const onboardingService = apiSlice.injectEndpoints({
           body: formData,
         };
       },
+      invalidatesTags: ["DashboardStatus"],
       transformResponse: (response: ResponseBody<any>) => response,
     }),
   }),

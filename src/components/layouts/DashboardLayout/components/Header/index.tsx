@@ -8,9 +8,6 @@ import { NotificationBell } from "@/assets/svgs";
 import { useAppSelector } from "@/store";
 
 type NavDescKey = keyof typeof NAV_DESCRIPTION;
-type NavHeaderType = {
-  [key: string]: string | ((businessName: string) => string);
-};
 
 const Header: FC<{
   sideNavIsOpen?: boolean;

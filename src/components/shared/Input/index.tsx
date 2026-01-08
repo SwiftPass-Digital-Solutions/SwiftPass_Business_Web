@@ -10,7 +10,7 @@ import React, {
 import styles from "./styles.module.css";
 import { FormikProps } from "formik";
 import { LoadingIcon } from "@/assets/svgs";
-import { Eye, EyeIcon, EyeOff } from "lucide-react";
+import { EyeIcon, EyeOff } from "lucide-react";
 
 type InputType = {
   type?: string;

@@ -35,6 +35,7 @@ const baseQuery = fetchBaseQuery({
 export const apiSlice = createApi({
   reducerPath: "api-slice",
   baseQuery,
+  tagTypes: ["DashboardStatus", "Documents", "User"],
   endpoints: () => ({}),
   keepUnusedDataFor: 0,
   refetchOnMountOrArgChange: true,

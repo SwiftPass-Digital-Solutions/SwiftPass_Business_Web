@@ -46,7 +46,7 @@ const UploadDocs = () => {
   const { state } = useLocation();
   const [stepIndex, setStepIndex] = useState(0);
   const [triggerUpload, { isLoading }] = useUploadDocsMutation();
-  const { businessCategories, loading } = useBusinessCategory();
+  const { businessCategories } = useBusinessCategory();
 
   const currentStep = STEPS[stepIndex]!;
 

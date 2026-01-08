@@ -31,4 +31,7 @@ export const endpoints = {
     uploadDocuments: "/identity/business/upload-document",
     documentCategories: "/identity/business/document-categories",
   },
+  dashboard: {
+    status: "/identity/business/status",
+  },
 };
