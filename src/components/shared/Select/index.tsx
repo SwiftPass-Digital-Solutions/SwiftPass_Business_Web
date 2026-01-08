@@ -13,6 +13,7 @@ import { ArrowDown } from "@/assets/svgs";
 // import { Checkbox } from "../Checkbox";
 import Input from "../Input";
 import { Search } from "@/assets/svgs";
+import clsx from "clsx";
 
 type SelectType<T> = {
   onClick?: () => void;
@@ -79,6 +80,7 @@ function Select({
     () => [{ label: placeholder, value: "" }, ...options],
     [options, placeholder]
   );
+
   const getSelectLabel = useCallback(() => {
     let optionLabel = multiple
       ? allOptions
@@ -94,16 +96,28 @@ function Select({
             ? option === formik?.values?.[name]
             : option.value === formik?.values?.[name]
         );
-    if (!optionLabel) return placeholder ?? "Select...";
 
-    return typeof optionLabel === "string"
-      ? optionLabel?.replace("<br/>", " ")
-      : optionLabel.label?.replace("<br/>", " ");
+    if (!optionLabel) {
+      return {
+        label: placeholder ?? "Select...",
+        isPlaceholder: true,
+      };
+    }
+
+    return {
+      label:
+        typeof optionLabel === "string"
+          ? optionLabel.replace("<br/>", " ")
+          : optionLabel.label?.replace("<br/>", " "),
+      isPlaceholder: false,
+    };
   }, [multiple, allOptions, formik?.values, name, placeholder]);
 
   function handleChange(e: string) {
     formik?.setValues({ ...formik?.values, [name]: e });
   }
+
+  const { label: selectedLabel, isPlaceholder } = getSelectLabel();
 
   return (
     <div className={classes}>
@@ -128,8 +142,13 @@ function Select({
               disabled && "cursor-not-allowed"
             }`}
           >
-            <span className="w-[80%] block truncate mr-2 pt-[17px] flex-grow text-[#9ca3af]!">
-              {getSelectLabel()}
+            <span
+              className={clsx(
+                "w-[80%] block truncate mr-2 pt-4.25 grow",
+                isPlaceholder ? "text-[#9ca3af]" : "text-[#222222] font-normal"
+              )}
+            >
+              {selectedLabel}
             </span>
             <ArrowDown className="auto" />
           </Listbox.Button>

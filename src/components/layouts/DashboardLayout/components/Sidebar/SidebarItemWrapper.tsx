@@ -22,7 +22,7 @@ const SidebarItemWrapper: React.FC<
 
   return (
     <div
-      className={`relative font-bricolage flex flex-col gap-4 ${
+      className={`relative font-archivo flex flex-col gap-4 ${
         sub ? "bg-gray-100 rounded-lg py-2" : ""
       }`}
       onClick={onClick}

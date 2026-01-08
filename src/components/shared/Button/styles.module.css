@@ -2,7 +2,7 @@
 
 .container * {
   letter-spacing: 0.5px;
-  color: var(--app-white);
+  /* color: var(--app-white); */
   font-size: 1rem;
 }
 
@@ -22,10 +22,11 @@
 }
 
 button.container:disabled {
-  background-color: #e5e7eb;
-  color: #444444;
-  border: none;
+  background-color: #fafafa;
+  color: #DCDCDC;
+  border: 1px solid #fbfbfb;
   cursor: not-allowed;
+  filter: drop-shadow(0 4px 0px rgba(251, 251, 251, 1));
 }
 
 .container.light {
@@ -56,14 +57,14 @@ button.container:disabled {
 
 .container.outlined {
   font-weight: 500;
-  color: #1A1A1A;
+  color: #1a1a1a;
   background-color: #fafafa;
   border: 1px solid #dcdcdc;
   filter: drop-shadow(0 4px 0px rgba(220, 220, 220, 1));
 }
 
 .container.outlined * {
-  color: #1A1A1A;
+  color: #1a1a1a;
 }
 
 .container .no-background * {

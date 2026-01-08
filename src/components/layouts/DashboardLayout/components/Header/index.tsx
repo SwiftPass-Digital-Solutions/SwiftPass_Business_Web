@@ -1,62 +1,85 @@
 import { FC } from "react";
 import styles from "./styles.module.css";
 import { capitalizeFirstLetter } from "@/utils";
-import { Bell, CircleQuestionMark, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { useLocation } from "react-router";
-import { NAV_HEADER } from "@/constants";
-import { Input } from "@/components/shared";
+import { NAV_DESCRIPTION, NAV_HEADER } from "@/constants";
+import { NotificationBell } from "@/assets/svgs";
+import { useAppSelector } from "@/store";
 
-type NavHeaderKey = keyof typeof NAV_HEADER;
+type NavDescKey = keyof typeof NAV_DESCRIPTION;
 
 const Header: FC<{
   sideNavIsOpen?: boolean;
   handleToggleDrawer: () => void;
 }> = ({ sideNavIsOpen, handleToggleDrawer }) => {
   const { pathname } = useLocation();
-  const title = (pathname?.split("/")[1] as NavHeaderKey) || "";
+  const title = (pathname?.split("/")[1] as NavDescKey) || "";
+  const { businessName } = useAppSelector((state) => state.auth);
+
+  // Example: get header text
+  const getHeaderText = () => {
+    const header = NAV_HEADER[title];
+
+    if (!header) return "";
+
+    if (typeof header === "function") {
+      return header(businessName || "");
+    }
+
+    return header;
+  };
+
   return (
     <div
-      className={`${styles["wrapper"]} font-bricolage z-10 w-full sticky top-0 bg-white border-[#E5E7EB] border-b-[0.5px]`}
+      className={`${styles["wrapper"]} font-archivo z-10 sticky top-0 bg-white`}
     >
       <header
         className={`${styles.container} ${
           styles.nav
-        } px-5 py-8 flex justify-between items-center gap-3 md:gap-6 ${
-          !sideNavIsOpen && "md:pl-10"
+        } px-8 mt-6 md:mt-15 flex justify-between items-center gap-3 md:gap-6 ${
+          !sideNavIsOpen && ""
         }`}
       >
-        <div className="w-[60%]">
+        <div className="flex items-center gap-4">
           <button
             type="button"
-            className="p-2 text-gray-800 dark:text-white md:hidden"
+            className="p-2 text-gray-800 dark:text-white md:hidden border border-[#EEEEEE] rounded-lg"
             onClick={handleToggleDrawer}
           >
-            <Menu stroke="#000000" />
+            <Menu stroke="#292D32" />
           </button>
-          <div className="ml-7.5">
-            <p className="text-[#222222]  text-base font-semibold">
-              {capitalizeFirstLetter(title.replace("-", " "))}
+          <div className="">
+            <p className="text-[#030303] block md:hidden text-xl md:text-[22px] font-medium">
+              {capitalizeFirstLetter(title.replace("-", " ")) === "Dashboard" &&
+                "Overview"}
             </p>
-            <p className="text-sm text-[#5A5A5A] font-normal">
-              {NAV_HEADER[title]}
-            </p>
+            <div className="hidden md:block">
+              <p className="text-[#030303] text-xl md:text-[22px] font-medium">
+                {getHeaderText()}
+              </p>
+              <p className="text-base text-[#737373] font-normal">
+                {NAV_DESCRIPTION[title]}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="w-[40%] flex items-center gap-7.5">
-          <div className="w-full">
-            <Input
-              name="search"
-              bgType="search"
-              placeholder="Search for tickets, customers or payment"
-            />
-          </div>
+        <div className=" flex items-center gap-7.5">
           <div className="flex items-center gap-4 ml-auto">
-            <Bell width={20} stroke="#6C757D" />
-            <CircleQuestionMark width={20} stroke="#6C757D" />
+            <NotificationBell />
           </div>
         </div>
       </header>
+
+      <div className="block md:hidden mx-8 mt-6">
+        <p className="text-[#030303] text-xl font-medium">{getHeaderText()}</p>
+        <p className="text-sm text-[#737373] font-normal">
+          {NAV_DESCRIPTION[title]}
+        </p>
+      </div>
+
+      <hr className="mx-8 border border-[#EEEEEE] md:mt-4 hidden md:block" />
     </div>
   );
 };

@@ -34,17 +34,19 @@ const SidebarItem: React.FC<{
         to={path || "#"}
         onClick={onClick}
         className={`${styles["icon-wrapper"]} ${path && styles["nav-icon"]} ${
-          isActive ? `${styles["active"]} text-primary-100 bg-[#F5F7F9]` : ""
-        } flex items-center gap-3 px-2 ${
-          sidebarOpen && "pl-7"
-        } py-3.5 hover:bg-[#F5F7F9] border-l-8 border-[#072760] cursor-pointer ${
+          isActive
+            ? `${styles["active"]} bg-[#FFFFFF] border border-[#EEEEEE] drop-shadow-xs rounded-xl`
+            : ""
+        } flex items-center gap-3 ${
+          sidebarOpen ? "mx-8 py-3.5 px-3" : "mx-3"
+        } py-3.5 hover:bg-[#F5F7F9] cursor-pointer ${
           sidebarOpen === false && "md:justify-center"
         }  ${className}`}
       >
-        {Icon && <Icon height={24} width={24} />}
+        {Icon && <Icon height={16} width={16} />}
         <span
           className={`${
-            isActive ? `text-[#072760]` : "text-[#E5E7EB]"
+            isActive ? `text-primary` : "text-[#9F9F9F]"
           } text-sm font-normal hover:text-black ${
             sidebarOpen === false && "md:hidden"
           }`}

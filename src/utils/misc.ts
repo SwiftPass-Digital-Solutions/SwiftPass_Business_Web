@@ -1,5 +1,11 @@
 import { APP_PATHS, MAX_COOKIES_AGE } from "@/constants";
 import dayjs from "dayjs";
+import duration from "dayjs/plugin/duration";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(duration);
+dayjs.extend(utc);
+
+export { dayjs as dayJs };
 
 export const getCookie = (name: string) => {
   try {
@@ -50,20 +56,13 @@ export const capitalizeStrings = (value = "") => {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getErrorMessage = (error: any): string => {
-  // Handle field-level validation errors
-  const fieldErrors = error?.response?.data?.errors || error?.errors;
-  if (fieldErrors && typeof fieldErrors === "object") {
-    const messages = Object.values(fieldErrors).flat().filter(Boolean);
-    if (messages.length > 0) {
-      return messages.join(" ");
-    }
-  }
   return (
     error?.response?.data?.title ||
     (typeof error?.response?.data === "string"
       ? error?.response?.data || error?.response?.statusText
       : error?.response?.data?.message) ||
-    error.message ||
+    error?.data?.message ||
+    error?.message ||
     "An unknown error occurred"
   );
 };
@@ -84,7 +83,7 @@ export const handleLogoutRedirect = () => {
   if (typeof window !== "undefined") {
     expireCookie("_tk");
     expireCookie("_ar");
-    window.location.replace(APP_PATHS.HOME);
+    window.location.replace(APP_PATHS.LOGIN);
   }
 };
 

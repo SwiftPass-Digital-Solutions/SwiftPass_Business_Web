@@ -20,6 +20,12 @@ import Edit from "./edit.svg?react";
 import Delete from "./delete.svg?react";
 import View from "./view.svg?react";
 import SwiftPassLogo from "./swiftpass-logo.svg?react";
+import Dashboard from "./home.svg?react";
+import Reports from "./reports.svg?react";
+import Settings from "./settings.svg?react";
+import Compliance from "./compliance.svg?react";
+import Customers from "./customers.svg?react";
+import ApiCredit from "./apis-credit.svg?react";
 
 export {
   Close,
@@ -43,5 +49,11 @@ export {
   Edit,
   Delete,
   View,
-  SwiftPassLogo
+  SwiftPassLogo,
+  Compliance,
+  Customers,
+  Dashboard,
+  Reports,
+  Settings,
+  ApiCredit,
 };

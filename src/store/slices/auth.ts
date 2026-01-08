@@ -1,16 +1,24 @@
 import { getCookie } from "@/utils";
 import { createSlice } from "@reduxjs/toolkit";
 
+type UserType = "Business" | "Individual";
+
 interface IAuth {
   loggedIn: boolean;
   email: string | null;
-  username: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  businessName: string | null;
+  userType: UserType | null;
 }
 
 const initialState: IAuth = {
   loggedIn: !!getCookie("_tk"),
   email: null,
-  username: null,
+  firstName: "",
+  lastName: "",
+  businessName: "",
+  userType: null,
 };
 
 export const authSlice = createSlice({
@@ -23,7 +31,10 @@ export const authSlice = createSlice({
         ...state,
         loggedIn: true,
         email: payload?.email,
-        username: payload?.username,
+        firstName: payload?.firstName,
+        lastName: payload?.lastName,
+        businessName: payload?.businessName,
+        userType: payload?.userType,
       };
     },
     logout: () => initialState,

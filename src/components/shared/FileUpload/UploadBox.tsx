@@ -14,6 +14,7 @@ import { formatFileBytes, readFileToDataUrl } from "@/utils";
 // import { useDocumentUploadMutation } from "@/services";
 // import { DocTypes } from "@/constants";
 import { FileIcon } from "@/assets/svgs";
+import { Trash2 } from "lucide-react";
 
 interface IProps {
   accept?: string;
@@ -49,7 +50,7 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
       accept = ".jpg,.png,.jpeg",
       onFile,
       shape,
-      holderShape = null,
+      // holderShape = null,
       trim = true,
       disabled = false,
       maxSize = 500,
@@ -70,7 +71,7 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
     const [fileSizeError, setFileSizeError] = useState(false);
     const [error, setError] = useState("");
     const [isDragging, setIsDragging] = useState<boolean>(false);
-    const [fileName, setFileName] = useState<string | null>(null);
+    const [, setFileName] = useState<string | null>(null);
 
     const choosePicture = useRef<any>(null);
     // const cropperRef = useRef(null);
@@ -113,37 +114,36 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
     const handleFileSelectionChange: React.ChangeEventHandler<
       HTMLInputElement
     > = async (event) => {
-      const file = event?.target?.files?.[0] as Blob | File;
+      const file = event?.target?.files?.[0] as File;
+      if (!file) return;
+
       setFileSizeError(false);
       setError("");
 
-      if (file?.size > maxSize * 1024) {
+      if (file.size > maxSize * 1024) {
         setError("File is above the size limit");
-        return setFileSizeError(true);
+        setFileSizeError(true);
+        return;
       }
-      setFileName((file as File)?.name);
 
-      if (!useCropper && returnFile) {
-        // Don't read as DataURL, just return the File
-        return onFile(file); // 👈 return raw File
-      }
+      setFileName(file.name);
 
       const fileData = (await readFileToDataUrl(file)) as string;
-
-      if (returnFile) {
-        setCroppedImage(fileData);
-        // return handleImageUpload(file);
-      }
+      setCurrentImage(fileData);
 
       if (useCropper) {
-        setCurrentImage(fileData);
         return setAvatarModal(true);
+      }
+
+      if (returnFile) {
+        return onFile(file);
       }
 
       const base64String = fileData.split(",")[1];
       if (trim) {
         return onFile(base64String);
       }
+
       return onFile(fileData);
     };
 
@@ -200,16 +200,17 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
           }
 
           const reader = new FileReader();
+
           reader.onload = () => {
             const fileData = reader.result as string;
 
-            if (returnFile) {
-              setCroppedImage(fileData);
-              // return handleImageUpload(file);
+            setCurrentImage(fileData);
+
+            if (returnFile && !useCropper) {
+              return onFile(file);
             }
 
             if (useCropper) {
-              setCurrentImage(fileData);
               return setAvatarModal(true);
             }
 
@@ -220,6 +221,7 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
 
             return onFile(fileData);
           };
+
           reader.readAsDataURL(file);
         }
       },
@@ -244,6 +246,8 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
       setIsDragging(false);
     };
 
+    const previewImage = croppedImage || currentImage;
+
     return (
       <div className="flex flex-col gap-2 font-archivo">
         {/* Upload box */}
@@ -255,23 +259,20 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               className={`
-        w-full min-h-[260px]
-        rounded-xl border border-dashed
-        flex flex-col items-center justify-center
-        gap-3 text-center
-        transition-colors duration-150
-        ${
-          isDragging
-            ? "border-primary-500 bg-primary-50"
-            : "border-[#DCDCDC] bg-[#FAFAFA]"
-        }
-        ${fileSizeError || hasError || error ? "border-primary-500" : ""}
-        ${
-          disabled || loading
-            ? "pointer-events-none opacity-60"
-            : "cursor-pointer"
-        }
-      `}
+    relative
+    w-full min-h-[260px]
+    rounded-xl border border-dashed
+    flex flex-col items-center justify-center
+    gap-3 text-center
+    transition-colors duration-150
+    ${
+      isDragging
+        ? "border-primary-500 bg-primary-50"
+        : "border-[#DCDCDC] bg-[#FAFAFA]"
+    }
+    ${fileSizeError || hasError || error ? "border-primary-500" : ""}
+    ${disabled || loading ? "pointer-events-none opacity-60" : "cursor-pointer"}
+  `}
             >
               <input
                 ref={choosePicture}
@@ -283,14 +284,14 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
                 onClick={handleClick as any}
               />
 
-              {/* Icon */}
-              <span className="w-10 h-10 flex items-center justify-center rounded-lg border border-[#E4E7EC]">
-                <FileIcon className="text-[#98A2B3]" />
-              </span>
-
               {/* Main text */}
-              {!loading && !fileName && (
+              {!loading && !previewImage && (
                 <>
+                  {/* Icon */}
+                  <span className="w-10 h-10 flex items-center justify-center rounded-lg border border-[#E4E7EC]">
+                    <FileIcon className="text-[#98A2B3]" />
+                  </span>
+
                   <p className="text-sm text-[#344054]">
                     <span className="font-semibold text-primary underline">
                       Upload a file
@@ -311,12 +312,23 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
               )}
 
               {/* File name */}
-              {fileName && !loading && (
-                <p className="text-sm font-medium text-[#344054]">{fileName}</p>
+              {/* Image preview */}
+              {previewImage && !loading && (
+                <div className="absolute inset-0 w-full h-full">
+                  <img
+                    src={previewImage}
+                    alt="Uploaded preview"
+                    className={`
+        w-full h-full
+        object-cover
+        ${shape === "round" ? "rounded-full" : "rounded-xl"}
+      `}
+                  />
+                </div>
               )}
             </div>
           </label>
-          <div className="pt-4">
+          <div className="pt-4 flex flex-col items-center">
             {label && (
               <label
                 htmlFor={name}
@@ -328,6 +340,24 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
               >
                 {label}
               </label>
+            )}
+
+            {previewImage && (
+              <button
+                type="button"
+                onClick={() => {
+                  setCurrentImage(null);
+                  setCroppedImage(null);
+                  setFileName(null);
+                  onFile(null);
+                }}
+                className="mt-1 text-xs cursor-pointer text-red underline hover:text-red-600 flex gap-1 items-center"
+              >
+                <span>
+                  <Trash2 width={16} />
+                </span>
+                Remove Image
+              </button>
             )}
 
             {desc && (
@@ -345,7 +375,9 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
         </div>
 
         {/* Error */}
-        {error && <small className="text-xs text-primary-500">{error}</small>}
+        {error && (
+          <small className="text-xs text-red text-center">{error}</small>
+        )}
 
         {/* Image cropper */}
         <ImageCropper

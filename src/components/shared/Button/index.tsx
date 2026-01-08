@@ -1,5 +1,6 @@
 import React from "react";
 import styles from "./styles.module.css";
+import { LoaderCircle } from "lucide-react";
 
 interface Props {
   children?: React.ReactNode;
@@ -12,6 +13,7 @@ interface Props {
   buttonStyle?: "rounded" | "curved";
   disabled?: boolean;
   color?: string;
+  loading?: boolean;
 }
 
 const Button: React.FC<Props> = ({
@@ -25,6 +27,7 @@ const Button: React.FC<Props> = ({
   disabled = false,
   color,
   textClass,
+  loading,
   ...rest
 }) => {
   let containerClass = styles.container;
@@ -41,7 +44,13 @@ const Button: React.FC<Props> = ({
       {...rest}
     >
       <span style={{ color }} className={textClass}>
-        {text || children}
+        {loading ? (
+          <span className="flex items-center gap-2">
+            <LoaderCircle className="animate-spin" /> Loading...
+          </span>
+        ) : (
+          text || children
+        )}
       </span>
     </button>
   );

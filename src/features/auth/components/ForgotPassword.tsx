@@ -1,10 +1,48 @@
 import { SwiftPassLogo } from "@/assets/svgs";
 import { Button, Input } from "@/components";
+import { APP_PATHS } from "@/constants";
+import { useForgotPasswordMutation } from "@/services";
+import { getErrorMessage } from "@/utils";
+import { forgotPasswordValidationSchema } from "@/validations";
+import { useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+
+const initialValues = {
+  email: "",
+};
 
 const ForgotPassword = () => {
+  const navigate = useNavigate();
+  const [triggerForgotPassword, { isLoading }] = useForgotPasswordMutation();
+
+  const formik = useFormik({
+    initialValues,
+    onSubmit: async (values) => {
+      try {
+        const response = await triggerForgotPassword(values).unwrap();
+        if (response?.status) {
+          toast.success(
+            response?.message || "Verification code sent to your email"
+          );
+          navigate(APP_PATHS.OTP, { state: { ...response?.data, ...values } });
+        } else {
+          const message = getErrorMessage(response);
+          toast.error(message || response?.message || "An error occurred");
+        }
+      } catch (error) {
+        const message = getErrorMessage(error);
+        toast.error(message || "An error occurred");
+      }
+    },
+    validationSchema: forgotPasswordValidationSchema,
+  });
+
+  const { handleSubmit, isValid, dirty } = formik;
+
   return (
-    <div className="w-full h-screen grid grid-cols-2 font-archivo overflow-hidden">
-      <div className="col-span-1 flex flex-col justify-center w-full h-full mx-auto py-7 pl-20 pr-12 bg-white rounded-2xl text-[#222222]">
+    <div className="w-full h-screen grid grid-cols-1 md:grid-cols-2 font-archivo overflow-hidden">
+      <div className="col-span-1 flex flex-col md:justify-center w-full h-full mx-auto py-7 md:pl-20 pl-4 md:pr-12 pr-4 bg-white rounded-2xl text-[#555555]">
         <SwiftPassLogo />
 
         <div className="space-y-1 mt-8">
@@ -20,34 +58,39 @@ const ForgotPassword = () => {
               name="email"
               label="Email address"
               placeholder="Enter your email"
+              formik={formik}
             />
           </div>
         </div>
 
         <div className="mt-12.5">
-          <Button text="Next" className="w-full!" />
+          <Button
+            text="Next"
+            onClick={handleSubmit}
+            loading={isLoading}
+            disabled={!(dirty && isValid) || isLoading}
+            className="w-full!"
+          />
         </div>
 
         <div>
           <p className="text-[#555555] font-medium mt-8">
             Remember password?{" "}
-            <a href="" className="text-primary">
+            <a href={APP_PATHS.LOGIN} className="text-primary">
               Log in
             </a>
           </p>
         </div>
       </div>
 
-      <div className="col-span-1 h-full px-16 py-10.5">
+      <div className="col-span-1 h-full px-16 py-10.5 hidden md:block">
         <div
-          className="w-full h-full flex justify-end bg-white"
+          className="w-full h-full bg-white"
           style={{
             backgroundImage: `url('/src/assets/pngs/onboarding-hero.png')`,
-            backgroundSize: "contain",
+            backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
-            backgroundPositionX: "right",
-            // height: "740px",
-            // width: "987px",
+            backgroundPosition: "right center",
           }}
         />
       </div>
