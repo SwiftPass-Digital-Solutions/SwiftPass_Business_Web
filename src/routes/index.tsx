@@ -33,6 +33,9 @@ const Dashboard = lazy(
 const Compliance = lazy(
   () => import("../features/compliance/components/Compliance")
 );
+const DocumentCategories = lazy(
+  () => import("../features/compliance/components/DocumentCategories")
+);
 
 const AppRoutes = () => {
   const { loggedIn } = useAppSelector((state) => state.auth);
@@ -55,6 +58,10 @@ const AppRoutes = () => {
           <Route element={<DashboardLayout />}>
             <Route path={APP_PATHS.DASHBOARD} element={<Dashboard />} />
             <Route path={APP_PATHS.COMPLIANCE} element={<Compliance />} />
+            <Route
+              path={APP_PATHS.DOCUMENT_CATEGORIES}
+              element={<DocumentCategories />}
+            />
           </Route>
         </Route>
       </Routes>

@@ -15,11 +15,12 @@ const Header: FC<{
 }> = ({ sideNavIsOpen, handleToggleDrawer }) => {
   const { pathname } = useLocation();
   const title = (pathname?.split("/")[1] as NavDescKey) || "";
+  const subtitle = (pathname?.split("/")[2] as NavDescKey) || "";
   const { businessName } = useAppSelector((state) => state.auth);
+  const maintitle = subtitle || title;
 
-  // Example: get header text
   const getHeaderText = () => {
-    const header = NAV_HEADER[title];
+    const header = NAV_HEADER[maintitle];
 
     if (!header) return "";
 
@@ -51,15 +52,15 @@ const Header: FC<{
           </button>
           <div className="">
             <p className="text-[#030303] block md:hidden text-xl md:text-[22px] font-medium">
-              {capitalizeFirstLetter(title.replace("-", " ")) === "Dashboard" &&
-                "Overview"}
+              {capitalizeFirstLetter(maintitle.replace("-", " ")) ===
+                "Dashboard" && "Overview"}
             </p>
             <div className="hidden md:block">
               <p className="text-[#030303] text-xl md:text-[22px] font-medium">
                 {getHeaderText()}
               </p>
               <p className="text-base text-[#737373] font-normal">
-                {NAV_DESCRIPTION[title]}
+                {NAV_DESCRIPTION[maintitle]}
               </p>
             </div>
           </div>
@@ -75,7 +76,7 @@ const Header: FC<{
       <div className="block md:hidden mx-8 mt-6">
         <p className="text-[#030303] text-xl font-medium">{getHeaderText()}</p>
         <p className="text-sm text-[#737373] font-normal">
-          {NAV_DESCRIPTION[title]}
+          {NAV_DESCRIPTION[maintitle]}
         </p>
       </div>
 

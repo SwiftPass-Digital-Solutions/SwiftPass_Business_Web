@@ -1,12 +1,6 @@
 import { endpoints, REQUEST_METHODS } from "@/constants";
 import { apiSlice } from "@/store";
-import { ResponseBody } from "@/types";
-
-type BusinessStatus = "Pending" | "Completed" | string;
-
-type UploadedDocument = {
-  // Adjust when backend starts returning document details
-};
+import { BusinessStatus, ResponseBody, UploadedDocument } from "@/types";
 
 interface StatusData {
   email: string;

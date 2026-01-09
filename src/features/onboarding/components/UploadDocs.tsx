@@ -70,9 +70,6 @@ const UploadDocs = () => {
     [currentCategory, businessCategories]
   );
 
-  console.log(currentCategory);
-  console.log(availableSubCategories);
-
   const formik = useFormik({
     initialValues,
     onSubmit: async (value) => {
