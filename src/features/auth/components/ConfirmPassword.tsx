@@ -127,7 +127,7 @@ const ConfirmPassword = () => {
         <div
           className="w-full h-full bg-white"
           style={{
-            backgroundImage: `url('/src/assets/pngs/onboarding-hero.png')`,
+            backgroundImage: `url('/images/onboarding-hero.png')`,
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "right center",

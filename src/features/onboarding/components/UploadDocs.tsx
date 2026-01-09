@@ -2,7 +2,7 @@ import { SwiftPassLogo } from "@/assets/svgs";
 import { Button, UploadBox } from "@/components";
 import { useUploadDocsMutation } from "@/services";
 import { useFormik } from "formik";
-import {  useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useBusinessCategory } from "../hooks";
 import { APP_PATHS } from "@/constants";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -71,7 +71,6 @@ const UploadDocs = () => {
   );
 
   console.log(availableSubCategories);
-  
 
   const formik = useFormik({
     initialValues,
@@ -192,7 +191,7 @@ const UploadDocs = () => {
         <div
           className="w-full h-full bg-white"
           style={{
-            backgroundImage: `url('/src/assets/pngs/onboarding-hero.png')`,
+            backgroundImage: `url('/images/onboarding-hero.png')`,
             backgroundSize: "cover",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "right center",
