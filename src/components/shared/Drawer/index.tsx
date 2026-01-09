@@ -1,8 +1,7 @@
 /** @format */
 import React, { Fragment, ReactNode } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import styles from "./styles.module.css";
-import { X } from "lucide-react";
+import { BackArrow } from "@/assets/svgs";
 
 const Drawer: React.FC<{
   open: boolean;
@@ -27,7 +26,7 @@ const Drawer: React.FC<{
     <Transition appear show={open} as={Fragment}>
       <Dialog
         as="div"
-        className="relative z-[999]"
+        className="relative z-[999] font-archivo"
         onClose={!stopOutsideClickClose ? handleClose : () => {}}
         static
       >
@@ -41,11 +40,11 @@ const Drawer: React.FC<{
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black-500 bg-opacity-50 backdrop-blur-[2px]" />
+          <div className="fixed inset-0 bg-[#a3a3a326] bg-opacity-50 backdrop-blur-[4px]" />
         </Transition.Child>
 
         {/* Side panel */}
-        <div className="fixed inset-0 flex justify-end z-[9999]">
+        <div className="fixed inset-0 flex justify-end z-[9999] md:mr-10.5 md:my-10.5">
           <Transition.Child
             as={Fragment}
             enter="transform transition ease-in-out duration-300"
@@ -56,27 +55,29 @@ const Drawer: React.FC<{
             leaveTo="translate-x-full"
           >
             <Dialog.Panel
-              className={`w-full max-w-xl h-full transform overflow-hidden bg-[#ffffff] shadow-xl transition-all relative ${containerClass} ${
+              className={`w-full rounded-[20px] max-w-xl h-full transform overflow-hidden bg-[#ffffff] shadow-xl transition-all relative ${containerClass} ${
                 transparent && "!bg-transparent"
               }`}
             >
-              {!hideCloseBtn && (
-                <button
-                  type="button"
-                  className={`${styles["close-btn"]} absolute top-4 right-4 z-10`}
-                  onClick={handleClose}
-                >
-                  <X />
-                </button>
-              )}
+              <div className="flex gap-3 pt-8 px-8 items-center">
+                {!hideCloseBtn && (
+                  <button
+                    type="button"
+                    className={`z-10`}
+                    onClick={handleClose}
+                  >
+                    <BackArrow />
+                  </button>
+                )}
 
-              {title && (
-                <div className="p-4 border-b border-gray-200 text-lg font-semibold">
-                  {title}
-                </div>
-              )}
+                {title && (
+                  <div className=" border-[#1A1A1A] text-2xl font-medium">
+                    {title}
+                  </div>
+                )}
+              </div>
 
-              <div className="p-4 h-full overflow-y-auto">{children}</div>
+              <div className="px-8 pb-8 pt-2 w-full h-full overflow-y-auto">{children}</div>
             </Dialog.Panel>
           </Transition.Child>
         </div>

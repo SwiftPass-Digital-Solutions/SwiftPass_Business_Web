@@ -10,6 +10,7 @@ import { Link } from "react-router";
 import { SwiftPassLogo } from "@/assets/svgs";
 import { Button } from "@/components/shared";
 import { Avatar } from "@/assets/pngs";
+import { useDashboardStatus } from "@/hooks";
 
 export interface INavItem {
   title: string;
@@ -28,6 +29,7 @@ const SidebarContent: React.FC<{
 }> = ({ isOpen, className = "" }) => {
   const dispatch = useAppDispatch();
   const { businessName, email } = useAppSelector((state) => state.auth);
+  const { dashboardData } = useDashboardStatus();
 
   const dashboardPaths: INavItem[] = useMemo(() => {
     return dashboardNavigation || [];
@@ -116,13 +118,15 @@ const SidebarContent: React.FC<{
             </div>
             <h3 className="text-lg font-medium">{businessName}</h3>
             <p>{email}</p>
-            <div className="mt-4">
-              <Button
-                variant="outlined"
-                text="Upload documents"
-                textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
-              />
-            </div>
+            {!dashboardData?.hasUploadedDocuments && (
+              <div className="mt-4">
+                <Button
+                  variant="outlined"
+                  text="Upload documents"
+                  textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
+                />
+              </div>
+            )}
           </div>
         </div>
       </motion.div>

@@ -10,7 +10,7 @@ const SidebarItemWrapper: React.FC<
   const { pathname } = useLocation();
 
   const isActivePath = useCallback(
-    (path: string) => path === pathname,
+    (path: string) => pathname === path || pathname.startsWith(`${path}/`),
     [pathname]
   );
 

@@ -2,7 +2,7 @@ import { FC, ReactNode } from "react";
 
 type StatCardProps = {
   title: string;
-  value: string | number;
+  value: string | number | null | undefined;
   icon?: ReactNode;
   subtitle?: string;
 };

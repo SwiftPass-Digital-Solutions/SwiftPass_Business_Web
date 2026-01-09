@@ -6,11 +6,11 @@
 }
 
 .close-btn {
-    display: flex;
+    /* display: flex;
     margin-bottom: 19px;
-    position: absolute;
-    top: 12px;
-    right: 12px;
+    position: absolute; */
+    /* top: 12px;
+    left: 12px; */
 }
 
 .close-btn svg {

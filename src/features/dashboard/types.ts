@@ -1,0 +1,7 @@
+export type DocumentStatus = "Approved" | "Pending" | "Rejected";
+
+export type DocumentItem = {
+  id: string;
+  title: string;
+  status: DocumentStatus;
+};

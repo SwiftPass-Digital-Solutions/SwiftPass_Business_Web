@@ -14,6 +14,7 @@ export const APP_PATHS = {
   // dashboards
   DASHBOARD: "/dashboard",
   COMPLIANCE: "/compliance",
+  DOCUMENT_CATEGORIES: "/compliance/document-categories",
 };
 
 export const MAX_COOKIES_AGE = 3600 * 24;
@@ -39,6 +40,7 @@ export const NAV_DESCRIPTION = {
   "api-&-credits": "View the details of your APIs and credits all here",
   settings:
     "Manage your business profile, team access, and account security all in one place",
+  "document-categories": "View your full categories",
 };
 
 export const NAV_HEADER = {
@@ -49,4 +51,37 @@ export const NAV_HEADER = {
   "api-&-credits": "APIs & Credits",
   reports: "Insights that keep you informed",
   settings: "Customize and secure your SwiftPass experience",
+  "document-categories": "Document Categories",
 };
+
+export const categories = [
+  {
+    categoryName: "CorporateRegistration",
+    subCategories: [
+      { subCategoryId: 1, subCategoryName: "CACCertificate" },
+      { subCategoryId: 2, subCategoryName: "CACForm" },
+    ],
+  },
+  {
+    categoryName: "TaxCompliance",
+    subCategories: [
+      { subCategoryId: 1, subCategoryName: "VATCertificate" },
+      { subCategoryId: 2, subCategoryName: "TINCertificate" },
+    ],
+  },
+  {
+    categoryName: "DirectorId",
+    subCategories: [
+      { subCategoryId: 1, subCategoryName: "Passport" },
+      { subCategoryId: 2, subCategoryName: "NIN" },
+      { subCategoryId: 3, subCategoryName: "DriversLicense" },
+    ],
+  },
+  {
+    categoryName: "License",
+    subCategories: [
+      { subCategoryId: 1, subCategoryName: "SCUML" },
+      { subCategoryId: 2, subCategoryName: "IndustryLicense" },
+    ],
+  },
+];

@@ -26,6 +26,8 @@ import Settings from "./settings.svg?react";
 import Compliance from "./compliance.svg?react";
 import Customers from "./customers.svg?react";
 import ApiCredit from "./apis-credit.svg?react";
+import Document from "./document.svg?react";
+import CurvedArrow from "./curved-arrow.svg?react";
 
 export {
   Close,
@@ -56,4 +58,6 @@ export {
   Reports,
   Settings,
   ApiCredit,
+  Document,
+  CurvedArrow,
 };
