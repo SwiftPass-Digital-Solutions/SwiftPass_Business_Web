@@ -1,8 +1,6 @@
 /** @format */
 import React, { Fragment, ReactNode } from "react";
 import { Dialog, Transition } from "@headlessui/react";
-import styles from "./styles.module.css";
-import { X } from "lucide-react";
 import { BackArrow } from "@/assets/svgs";
 
 const Drawer: React.FC<{

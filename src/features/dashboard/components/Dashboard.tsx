@@ -1,5 +1,5 @@
 import { APis, Card, Customer } from "@/assets/pngs";
-import { Button, PageLoader, StatsCard } from "@/components";
+import { Button, StatsCard } from "@/components";
 import { useDashboardStatus } from "@/hooks";
 import { useMemo } from "react";
 import { Document } from "@/assets/svgs";
@@ -21,6 +21,8 @@ const statsData = [
 const Dashboard = () => {
   const { dashboardData, loading } = useDashboardStatus();
   const dashboardStatus = useMemo(() => dashboardData || null, [dashboardData]);
+
+  console.log(dashboardStatus, loading);
 
   const groupedDocs = useMemo<GroupedDocuments[]>(() => {
     if (!dashboardData?.uploadedDocuments?.length) return [];
