@@ -147,7 +147,7 @@ const Registration = () => {
           <div>
             <p className="text-[#555555] font-medium mt-8">
               Not new here?{" "}
-              <a href="" className="text-primary">
+              <a href={APP_PATHS.LOGIN} className="text-primary">
                 Login
               </a>
             </p>
