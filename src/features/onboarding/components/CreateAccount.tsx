@@ -65,8 +65,8 @@ const CreateAccount = () => {
   }, [state]);
 
   return (
-    <div className="w-full h-screen grid grid-cols-1 md:grid-cols-2 font-archivo overflow-hidden">
-      <div className="col-span-1 flex flex-col md:justify-center w-full h-full mx-auto py-7 md:pl-20 pl-4 md:pr-12 pr-4 bg-white rounded-2xl text-[#555555]">
+    <div className="w-full h-screen grid grid-cols-1 md:grid-cols-6 font-archivo overflow-hidden">
+      <div className="col-span-2 h-screen flex flex-col md:justify-center w-full mx-auto py-7 md:pl-20 md:pr-0 pl-4 pr-4 bg-white rounded-2xl text-[#555555]">
         <SwiftPassLogo />
 
         <div className="space-y-1 mt-8">
@@ -130,12 +130,12 @@ const CreateAccount = () => {
         </div>
       </div>
 
-      <div className="col-span-1 h-full px-16 py-10.5 hidden md:block">
+      <div className="col-span-4 h-full px-16 py-10.5 hidden md:block">
         <div
           className="w-full h-full bg-white"
           style={{
-            backgroundImage: `url('/images/onboarding-hero.png')`,
-            backgroundSize: "cover",
+            backgroundImage: `url('/images/sp-bg.png')`,
+            backgroundSize: "790px auto",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "right center",
           }}
