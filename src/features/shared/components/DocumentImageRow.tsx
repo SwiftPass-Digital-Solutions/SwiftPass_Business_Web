@@ -15,6 +15,15 @@ type DocumentImageRowProps = {
   setSelectedDoc?: (doc: { documentUrl: string; name: string }) => void;
 };
 
+const SUB_CATEGORY_LABELS: Record<string, string> = {
+  CACCertificate: "CAC Certificate",
+  CACForm: "CAC Form",
+  VATCertificate: "VAT Certificate",
+  TINCertificate: "TIN Certificate",
+  DriversLicense: "Drivers License",
+  IndustryLicense: "Industry License",
+};
+
 const DocumentImageRow = ({
   category,
   documentSubType,
@@ -35,6 +44,9 @@ const DocumentImageRow = ({
     return subCategory?.subCategoryName ?? "Unknown";
   };
 
+  const subCategory = getSubCategoryName(category, documentSubType);
+  const label = SUB_CATEGORY_LABELS[subCategory] ?? subCategory;
+
   return (
     <div className="ml-2 flex gap-2">
       <CurvedArrow />
@@ -51,9 +63,7 @@ const DocumentImageRow = ({
         <div className="flex justify-between w-full items-center gap-4">
           {/* connector / bullet */}
           {/* <span className="w-2 h-2 rounded-full bg-[#E6E6E6]" /> */}
-          <p className="text-base font-normal text-black">
-            {getSubCategoryName(category, documentSubType)}
-          </p>
+          <p className="text-base font-normal text-black">{label}</p>
           <StatusBadge status={verificationStatus} />
         </div>
         <div>

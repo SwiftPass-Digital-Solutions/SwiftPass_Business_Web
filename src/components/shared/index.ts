@@ -18,3 +18,4 @@ export { default as DateFilter } from "./DateFilter";
 export { default as MetricLineChart } from "./MetricLineChart";
 export { default as HorizontalBarChart } from "./HorizontalBarChart";
 export { default as StatsCard } from "./StatCard";
+export { default as ProgressBar } from "./ProgressBar";

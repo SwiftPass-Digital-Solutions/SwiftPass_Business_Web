@@ -1,27 +1,35 @@
 import { SwiftPassLogo } from "@/assets/svgs";
-import { Button, UploadBox } from "@/components";
+import { Button, Select, UploadBox } from "@/components";
 import { useUploadDocsMutation } from "@/services";
 import { useFormik } from "formik";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useBusinessCategory } from "../hooks";
 import { APP_PATHS } from "@/constants";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getErrorMessage } from "@/utils";
 
-const initialValues = {
+const STORAGE_KEY = "uploadDocsForm";
+
+const STEP_FIELDS = {
   cac: "",
   tin: "",
   id: "",
   licenses: "",
+} as const;
+
+const initialValues = {
+  ...STEP_FIELDS,
+  documentSubType: "",
 };
 
 type FormKeys = keyof typeof initialValues;
+type StepKey = keyof typeof STEP_FIELDS;
 
-const STEPS: readonly { key: FormKeys; label: string }[] = [
-  { key: "cac", label: "Corporate Registration (CAC Certificate)" },
-  { key: "tin", label: "Tax Compliance (TIN Certificate)" },
-  { key: "id", label: "Directors' IDs (NIN, Passport, Driver's License)" },
+const STEPS: readonly { key: StepKey; label: string }[] = [
+  { key: "cac", label: "Corporate Registration (CAC Certificate or CAC Form)" },
+  { key: "tin", label: "Tax Compliance (TIN Certificate or VAT Certificate)" },
+  { key: "id", label: "Directors' IDs (NIN, Passport, or Driver's License)" },
   {
     key: "licenses",
     label: "Licenses (SCUML, Industry License if applicable)",
@@ -34,7 +42,7 @@ type CategoryName =
   | "DirectorId"
   | "License";
 
-const STEP_TO_CATEGORY_MAP: Record<FormKeys, CategoryName> = {
+const STEP_TO_CATEGORY_MAP: Record<StepKey, CategoryName> = {
   cac: "CorporateRegistration",
   tin: "TaxCompliance",
   id: "DirectorId",
@@ -43,14 +51,30 @@ const STEP_TO_CATEGORY_MAP: Record<FormKeys, CategoryName> = {
 
 const UploadDocs = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { state } = useLocation();
-  const [stepIndex, setStepIndex] = useState(0);
   const [triggerUpload, { isLoading }] = useUploadDocsMutation();
   const { businessCategories } = useBusinessCategory();
 
+  const stepIndex = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const step = Number(params.get("step"));
+    return Number.isNaN(step) ? 0 : Math.min(step, STEPS.length - 1);
+  }, [location.search]);
+
+  const goToStep = (nextStep: number) => {
+    navigate(
+      {
+        pathname: location.pathname,
+        search: `?step=${nextStep}`,
+      },
+      { replace: true, state: { ...state } }
+    );
+  };
+
   const currentStep = STEPS[stepIndex]!;
 
-  const getCategoryFromStep = (stepKey: FormKeys) => {
+  const getCategoryFromStep = (stepKey: StepKey) => {
     return STEP_TO_CATEGORY_MAP[stepKey];
   };
 
@@ -70,10 +94,18 @@ const UploadDocs = () => {
     [currentCategory, businessCategories]
   );
 
-  console.log(availableSubCategories);
+  const persistedValues = useMemo(() => {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : initialValues;
+    } catch {
+      return initialValues;
+    }
+  }, []);
 
   const formik = useFormik({
-    initialValues,
+    initialValues: persistedValues,
+    enableReinitialize: true,
     onSubmit: async (value) => {
       try {
         const category = getCategoryFromStep(currentStep.key);
@@ -81,15 +113,16 @@ const UploadDocs = () => {
         const payload = {
           email: state?.contactEmail,
           documentCategory: category,
-          documentSubType: null,
+          documentSubType: value?.documentSubType,
           file: value[currentStep.key as FormKeys],
         };
 
         const response = await triggerUpload(payload).unwrap();
         if (response?.status) {
-          toast.success(response?.message || "Document uploaded successfully");
+          toast.success(response?.message || "Document uploaded");
+
           if (stepIndex < STEPS.length - 1) {
-            setStepIndex((prev) => prev + 1);
+            goToStep(stepIndex + 1);
           } else {
             navigate(APP_PATHS.LOGIN);
           }
@@ -104,21 +137,40 @@ const UploadDocs = () => {
     },
   });
 
-  const handleNext = () => {
-    if (stepIndex < STEPS.length - 1) {
-      setStepIndex((prev) => prev + 1);
-    } else {
-      formik.submitForm();
-    }
-  };
-
   const handleBack = () => {
     if (stepIndex > 0) {
-      setStepIndex((prev) => prev - 1);
+      goToStep(stepIndex - 1);
     }
   };
 
-  const { dirty, isValid } = formik;
+  const hasFile = !!formik.values[currentStep.key];
+
+  const { handleSubmit } = formik;
+
+  useEffect(() => {
+    sessionStorage.setItem("uploadStep", String(stepIndex));
+  }, [stepIndex]);
+
+  useEffect(() => {
+    const savedStep = Number(sessionStorage.getItem("uploadStep"));
+    if (!Number.isNaN(savedStep)) {
+      goToStep(savedStep);
+    }
+  }, []);
+
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(formik.values));
+  }, [formik.values]);
+
+  useEffect(() => {
+    const missingStep = STEPS.findIndex(
+      (step, index) => index < stepIndex && !formik.values[step.key]
+    );
+
+    if (missingStep !== -1) {
+      goToStep(missingStep);
+    }
+  }, [stepIndex, formik.values]);
 
   return (
     <div className="w-full h-screen grid grid-cols-1 md:grid-cols-6 font-archivo overflow-hidden">
@@ -140,7 +192,13 @@ const UploadDocs = () => {
         </div>
 
         <div className="mt-7.5 space-y-5">
+          <Select
+            name="documentSubType"
+            options={availableSubCategories}
+            formik={formik}
+          />
           <UploadBox
+            key={currentStep.key}
             name={currentStep.key}
             label={currentStep.label}
             onFile={(imgUrl) => formik.setFieldValue(currentStep.key, imgUrl)}
@@ -152,7 +210,7 @@ const UploadDocs = () => {
             trim={false}
             useCropper={false}
             hasError={!!formik.errors?.[currentStep.key]}
-            errorMessage={formik.errors?.[currentStep.key]}
+            // errorMessage={formik.errors?.[currentStep.key]}
           />
         </div>
 
@@ -161,16 +219,16 @@ const UploadDocs = () => {
             variant="outlined"
             text="Back"
             className="w-full!"
-            // disabled={stepIndex === 0}
+            disabled={stepIndex === 0}
             onClick={handleBack}
           />
 
           <Button
             text={stepIndex === STEPS.length - 1 ? "Submit" : "Next"}
             className="w-full!"
-            onClick={handleNext}
+            onClick={handleSubmit}
             loading={isLoading}
-            disabled={!(isValid && dirty) || isLoading}
+            disabled={!hasFile || isLoading}
           />
         </div>
 

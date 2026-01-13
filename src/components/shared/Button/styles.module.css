@@ -21,9 +21,21 @@
   padding: 16px 32px;
 }
 
+.container.normal {
+  padding: 16px 32px;
+  height: 55px;
+  font-size: 1rem;
+}
+
+.container.small {
+  padding: 12px 7.5px;
+  height: 32px;
+  font-size: 12px!;
+}
+
 button.container:disabled {
   background-color: #fafafa;
-  color: #DCDCDC;
+  color: #dcdcdc;
   border: 1px solid #fbfbfb;
   cursor: not-allowed;
   filter: drop-shadow(0 4px 0px rgba(251, 251, 251, 1));

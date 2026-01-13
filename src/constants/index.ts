@@ -1,5 +1,6 @@
 export * from "./api";
 export * from "./mocks";
+export * from "./enums";
 
 export const APP_PATHS = {
   LOGIN: "/",
@@ -85,3 +86,19 @@ export const categories = [
     ],
   },
 ];
+
+export const SUB_CATEGORY_LABELS: Record<string, string> = {
+  CACCertificate: "CAC Certificate",
+  CACForm: "CAC Form",
+  VATCertificate: "VAT Certificate",
+  TINCertificate: "TIN Certificate",
+  DriversLicense: "Drivers License",
+  IndustryLicense: "Industry License",
+};
+
+export const CATEGORY_LABELS: Record<string, string> = {
+  CorporateRegistration: "Corporate Registration",
+  DirectorId: "Director Id",
+  License: "License",
+  TaxCompliance: "Tax Compliance",
+};

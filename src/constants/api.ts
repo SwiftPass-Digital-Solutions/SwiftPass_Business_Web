@@ -34,4 +34,7 @@ export const endpoints = {
   dashboard: {
     status: "/identity/business/status",
   },
+  credits: {
+    analytics: "/credits/dashboard-analytics",
+  },
 };

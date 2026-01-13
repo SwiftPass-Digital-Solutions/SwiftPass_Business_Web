@@ -38,10 +38,10 @@ const DocumentGroup = ({
       </div>
 
       <div className="space-y-3">
-        {documents.map((doc) =>
+        {documents.map((doc, index) =>
           !showDocumentImages ? (
             <DocumentRow
-              key={doc.category}
+              key={index}
               category={doc.category}
               documentSubType={doc.documentSubType}
               verificationStatus={doc.verificationStatus}
@@ -49,7 +49,7 @@ const DocumentGroup = ({
             />
           ) : (
             <DocumentImageRow
-              key={doc.category}
+              key={index}
               category={doc.category}
               documentSubType={doc.documentSubType}
               verificationStatus={doc.verificationStatus}

@@ -3,7 +3,7 @@ import {
   Compliance,
   Customers,
   Dashboard,
-  Reports,
+  // Reports,
   Settings,
 } from "@/assets/svgs";
 import { APP_PATHS } from "@/constants";
@@ -29,11 +29,11 @@ export const dashboardNavigation = [
     url: "#",
     icon: ApiCredit,
   },
-  {
-    title: "Reports",
-    url: "#",
-    icon: Reports,
-  },
+  // {
+  //   title: "Reports",
+  //   url: "#",
+  //   icon: Reports,
+  // },
   {
     title: "Settings",
     url: "#",
