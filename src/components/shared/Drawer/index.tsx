@@ -55,7 +55,7 @@ const Drawer: React.FC<{
             leaveTo="translate-x-full"
           >
             <Dialog.Panel
-              className={`w-full rounded-[20px] max-w-xl h-full transform overflow-hidden bg-[#ffffff] shadow-xl transition-all relative ${containerClass} ${
+              className={`w-full rounded-[20px] max-w-xl h-full transform overflow-hidden bg-[#ffffff] shadow-xl transition-all relative flex flex-col ${containerClass} ${
                 transparent && "!bg-transparent"
               }`}
             >
@@ -77,7 +77,9 @@ const Drawer: React.FC<{
                 )}
               </div>
 
-              <div className="px-8 pb-8 pt-2 w-full h-full overflow-y-auto">{children}</div>
+              <div className="px-8 pb-8 pt-2 w-full flex-1 overflow-y-auto">
+                {children}
+              </div>
             </Dialog.Panel>
           </Transition.Child>
         </div>

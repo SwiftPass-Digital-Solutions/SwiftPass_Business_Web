@@ -11,6 +11,7 @@ interface Props {
   text?: string | "";
   variant?: "contained" | "outlined" | "light" | "simple";
   buttonStyle?: "rounded" | "curved";
+  size?: "normal" | "small";
   disabled?: boolean;
   color?: string;
   loading?: boolean;
@@ -24,6 +25,7 @@ const Button: React.FC<Props> = ({
   text,
   variant = "contained",
   buttonStyle = "curved",
+  size = "normal",
   disabled = false,
   color,
   textClass,
@@ -31,7 +33,7 @@ const Button: React.FC<Props> = ({
   ...rest
 }) => {
   let containerClass = styles.container;
-  containerClass += ` py-3 px-6 ${styles[buttonStyle]} ${styles[variant]}`;
+  containerClass += ` py-3 px-6 ${styles[buttonStyle]} ${styles[variant]} ${styles[size]}`;
   if (className) containerClass += ` ${className}`;
 
   return (

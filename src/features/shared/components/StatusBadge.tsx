@@ -7,6 +7,7 @@ type StatusBadgeProps = {
 const STATUS_STYLES: Record<DocumentStatus, string> = {
   Approved: "bg-green-50 text-green-600",
   Pending: "bg-orange-50 text-orange-500",
+  NotSubmitted: "bg-orange-50 text-orange-500",
   Rejected: "bg-red-50 text-red-500",
 };
 

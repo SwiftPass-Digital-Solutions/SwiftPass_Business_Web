@@ -1,4 +1,8 @@
-export type DocumentStatus = "Approved" | "Pending" | "Rejected";
+export type DocumentStatus =
+  | "Approved"
+  | "Pending"
+  | "Rejected"
+  | "NotSubmitted";
 
 export type DocumentItem = {
   id: string;
