@@ -1,4 +1,4 @@
-import { APP_PATHS, MAX_COOKIES_AGE } from "@/constants";
+import { APP_PATHS, categories, MAX_COOKIES_AGE } from "@/constants";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import utc from "dayjs/plugin/utc";
@@ -180,3 +180,15 @@ export const downloadFileFromUrl = (url: string, fileName?: string) => {
   document.body.removeChild(link);
 };
 
+export const getSubCategoryName = (
+  categoryName: string,
+  subCategoryId: number
+) => {
+  const category = categories.find((cat) => cat.categoryName === categoryName);
+  if (!category) return "Unknown";
+
+  const subCategory = category.subCategories.find(
+    (sub) => sub.subCategoryId === subCategoryId
+  );
+  return subCategory?.subCategoryName ?? "Unknown";
+};

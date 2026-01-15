@@ -1,7 +1,6 @@
 import { CurvedArrow } from "@/assets/svgs";
 import { DocumentStatus } from "../../dashboard/types";
 import {
-  categories,
   CATEGORY_LABELS,
   DocumentStatusEnum,
   SUB_CATEGORY_LABELS,
@@ -12,7 +11,7 @@ import { useState } from "react";
 import { useFormik } from "formik";
 import { useUploadDocsMutation } from "@/services";
 import { toast } from "react-toastify";
-import { getErrorMessage } from "@/utils";
+import { getErrorMessage, getSubCategoryName } from "@/utils";
 import { useAppSelector } from "@/store";
 
 type DocumentRowProps = {
@@ -44,17 +43,6 @@ const DocumentRow = ({
   const { email } = useAppSelector((state) => state.auth);
   const [drawer, toggleDrawer] = useState(false);
   const [triggerUpload, { isLoading }] = useUploadDocsMutation();
-  const getSubCategoryName = (categoryName: string, subCategoryId: number) => {
-    const category = categories.find(
-      (cat) => cat.categoryName === categoryName
-    );
-    if (!category) return "Unknown";
-
-    const subCategory = category.subCategories.find(
-      (sub) => sub.subCategoryId === subCategoryId
-    );
-    return subCategory?.subCategoryName ?? "Unknown";
-  };
   const subCategory = getSubCategoryName(category, documentSubType);
   const label = SUB_CATEGORY_LABELS[subCategory] ?? subCategory;
 
