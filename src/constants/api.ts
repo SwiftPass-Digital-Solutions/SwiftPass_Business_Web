@@ -37,4 +37,7 @@ export const endpoints = {
   credits: {
     analytics: "/credits/dashboard-analytics",
   },
+  apiManagement: {
+    getCustomers: "/api-management/customers",
+  },
 };

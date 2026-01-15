@@ -23,7 +23,7 @@ const EmptyState = ({
       </div>
       <div className="flex flex-col gap-1 justify-center items-center">
         <h5 className="text-black-900 text-xl">{title}</h5>
-        <p className="text-black-900 text-base">{message}</p>
+        <p className="text-black-900 text-sm">{message}</p>
       </div>
     </div>
   );

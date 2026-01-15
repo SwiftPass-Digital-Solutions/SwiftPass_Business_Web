@@ -37,6 +37,6 @@ export const apiSlice = createApi({
   baseQuery,
   tagTypes: ["DashboardStatus", "Credits", "User"],
   endpoints: () => ({}),
-  keepUnusedDataFor: 0,
+  // keepUnusedDataFor: 0,
   refetchOnMountOrArgChange: true,
 });

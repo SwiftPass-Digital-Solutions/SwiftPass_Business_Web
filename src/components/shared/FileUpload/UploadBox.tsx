@@ -251,7 +251,7 @@ const UploadBox: FC<IProps & React.RefAttributes<unknown>> = forwardRef(
     return (
       <div className="flex flex-col gap-2 font-archivo">
         {/* Upload box */}
-        <div className="p-4 bg-white drop-shadow-xs text-center rounded-xl">
+        <div className="p-4 bg-white drop-shadow-sm text-center rounded-xl">
           <label htmlFor={name}>
             <div
               ref={ref as LegacyRef<HTMLDivElement>}

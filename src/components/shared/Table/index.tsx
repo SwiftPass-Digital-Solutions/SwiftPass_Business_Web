@@ -142,7 +142,7 @@ const Table = <T,>({
 
   return (
     <div
-      className={`${styles["container"]} font-bricolage flex flex-col relative rounded !bg-white`}
+      className={`${styles["container"]} font-archivo flex flex-col relative rounded-xl !bg-white`}
       style={{ maxHeight: showViewAll ? "528px" : "100% " }}
     >
       {loading ? (
@@ -150,12 +150,12 @@ const Table = <T,>({
           className={`!overflow-y-scroll ${styles["no-scrollbar"]} !bg-white`}
         >
           <table>
-            <thead className="sticky top-0 bg-[#F4F6F8]">
+            <thead className="sticky top-0 bg-[#FBFBFB]">
               <tr>
                 <th>S/N</th>
                 {columns.map((_, i) => (
                   <th key={i}>
-                    <div className="animate-pulse h-4 w-24rounded" />
+                    <div className="animate-pulse h-4 w-24 rounded" />
                   </th>
                 ))}
               </tr>
@@ -166,7 +166,7 @@ const Table = <T,>({
           </table>
         </div>
       ) : !data || data.length === 0 ? (
-        <div className="min-h-[443px] p-5">
+        <div className="min-h-[343px] p-5">
           <EmptyState
             title={emptyTitle}
             message={emptyMessage}
@@ -178,8 +178,8 @@ const Table = <T,>({
           <div
             className={`!overflow-y-scroll ${styles["no-scrollbar"]} !bg-white`}
           >
-            <table className="">
-              <thead className="sticky top-0 bg-[#F4F6F8]">
+            <table className="rounded-xl">
+              <thead className="sticky top-0 bg-[#FBFBFB]">
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
                     {showSN && <th>S/N</th>}
