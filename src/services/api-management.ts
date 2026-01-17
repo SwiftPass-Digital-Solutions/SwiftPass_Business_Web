@@ -11,7 +11,7 @@ interface ApiManagementCustomersResponse {
   totalPages: number;
 }
 
-export const apiManagement = apiSlice.injectEndpoints({
+export const apiManagementService = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     customers: builder.query({
       query: (params) => ({
@@ -27,4 +27,4 @@ export const apiManagement = apiSlice.injectEndpoints({
   }),
 });
 
-export const { useCustomersQuery } = apiManagement;
+export const { useCustomersQuery } = apiManagementService;

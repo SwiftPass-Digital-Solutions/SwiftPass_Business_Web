@@ -36,6 +36,9 @@ const Compliance = lazy(
 const DocumentCategories = lazy(
   () => import("../features/compliance/components/DocumentCategories")
 );
+const Notifications = lazy(
+  () => import("../features/notifications/components/Notifications")
+);
 
 const AppRoutes = () => {
   const { loggedIn } = useAppSelector((state) => state.auth);
@@ -62,6 +65,7 @@ const AppRoutes = () => {
               path={APP_PATHS.DOCUMENT_CATEGORIES}
               element={<DocumentCategories />}
             />
+            <Route path={APP_PATHS.NOTIFICATIONS} element={<Notifications />} />
           </Route>
         </Route>
       </Routes>

@@ -2,6 +2,9 @@ import { APP_PATHS, categories, MAX_COOKIES_AGE } from "@/constants";
 import dayjs from "dayjs";
 import duration from "dayjs/plugin/duration";
 import utc from "dayjs/plugin/utc";
+import relativeTime from "dayjs/plugin/relativeTime";
+
+dayjs.extend(relativeTime);
 dayjs.extend(duration);
 dayjs.extend(utc);
 

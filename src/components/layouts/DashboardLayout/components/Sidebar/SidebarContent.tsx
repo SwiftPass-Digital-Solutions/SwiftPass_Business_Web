@@ -6,7 +6,7 @@ import { SidebarItemWrapper } from "./SidebarItemWrapper";
 import { dashboardNavigation } from "@/constants/navigation";
 import { ChevronLeft } from "lucide-react";
 import { APP_PATHS } from "@/constants";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { SwiftPassLogo } from "@/assets/svgs";
 import { Button } from "@/components/shared";
 import { Avatar } from "@/assets/pngs";
@@ -30,6 +30,7 @@ const SidebarContent: React.FC<{
   const dispatch = useAppDispatch();
   const { businessName, email } = useAppSelector((state) => state.auth);
   const { dashboardData } = useDashboardStatus();
+  const navigate = useNavigate();
 
   const dashboardPaths: INavItem[] = useMemo(() => {
     return dashboardNavigation || [];
@@ -123,6 +124,7 @@ const SidebarContent: React.FC<{
                 <Button
                   variant="outlined"
                   text="Upload documents"
+                  onClick={() => navigate(APP_PATHS.COMPLIANCE)}
                   textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
                 />
               </div>

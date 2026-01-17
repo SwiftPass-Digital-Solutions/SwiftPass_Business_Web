@@ -16,6 +16,9 @@ export const APP_PATHS = {
   DASHBOARD: "/dashboard",
   COMPLIANCE: "/compliance",
   DOCUMENT_CATEGORIES: "/compliance/document-categories",
+
+  // notifications
+  NOTIFICATIONS: "/notifications",
 };
 
 export const MAX_COOKIES_AGE = 3600 * 24;
@@ -42,6 +45,7 @@ export const NAV_DESCRIPTION = {
   settings:
     "Manage your business profile, team access, and account security all in one place",
   "document-categories": "View your full categories",
+  notifications: "Go through your notifications here",
 };
 
 export const NAV_HEADER = {
@@ -53,6 +57,7 @@ export const NAV_HEADER = {
   reports: "Insights that keep you informed",
   settings: "Customize and secure your SwiftPass experience",
   "document-categories": "Document Categories",
+  notifications: "Notifications",
 };
 
 export const categories = [

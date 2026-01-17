@@ -40,4 +40,8 @@ export const endpoints = {
   apiManagement: {
     getCustomers: "/api-management/customers",
   },
+  notifications: {
+    getNotifications: "/notifications",
+    readNotification: (id: number) => `/notifications/${id}/read`,
+  },
 };

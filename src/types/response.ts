@@ -25,3 +25,14 @@ export type UploadedDocument = {
   uploadedAt: string;
   lastUpdated: string | null;
 };
+
+export type Notifications = {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+  readAt: string;
+  source: string;
+};
