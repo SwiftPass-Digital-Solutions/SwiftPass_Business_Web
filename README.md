@@ -1,73 +1,130 @@
-# React + TypeScript + Vite
+# SwifPass Business
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SwifPass Business is a modern web application built with **Vite** and **React**. It provides a secure onboarding flow, dashboards, and compliance management for businesses.
 
-Currently, two official plugins are available:
+The app runs on **port 3001** by default.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+---
 
-## React Compiler
+## Table of Contents
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+* [Installation](#installation)
+* [Available Scripts](#available-scripts)
+* [Routes](#routes)
+* [Project Structure](#project-structure)
+* [Technologies Used](#technologies-used)
+* [Contributing](#contributing)
+* [License](#license)
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Installation
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1. Clone the repository:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+git clone <your-repo-url>
+cd swifpass-business
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Install dependencies:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
+# or
+yarn install
 ```
+
+3. Start the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+The app will run at [http://localhost:3001](http://localhost:3001).
+
+---
+
+## Available Scripts
+
+* `dev` – Starts the Vite development server.
+* `build` – Builds the app for production.
+* `preview` – Previews the production build locally.
+* `lint` – Runs code linting (if configured).
+* `format` – Formats code using Prettier (if configured).
+
+---
+
+## Routes
+
+### Authentication & Onboarding
+
+| Route                        | Description                 |
+| ---------------------------- | --------------------------- |
+| `/`                          | Login page                  |
+| `/forgot-password`           | Forgot password flow        |
+| `/otp`                       | OTP verification            |
+| `/confirm-password`          | Confirm password            |
+| `/onboarding/registration`   | User registration           |
+| `/onboarding/otp`            | Onboarding OTP verification |
+| `/onboarding/create-account` | Create a new account        |
+| `/onboarding/upload-docs`    | Upload required documents   |
+
+### Dashboards & Compliance
+
+| Route                             | Description                |
+| --------------------------------- | -------------------------- |
+| `/dashboard`                      | Main dashboard             |
+| `/compliance`                     | Compliance overview        |
+| `/compliance/document-categories` | Manage document categories |
+
+### Notifications
+
+| Route            | Description             |
+| ---------------- | ----------------------- |
+| `/notifications` | View user notifications |
+
+---
+
+## Project Structure
+
+```
+src/
+├─ assets/        # Images, SVGs, icons
+├─ components/    # Reusable UI components
+├─ constants/     # Constants used widely in the app
+├─ features/      # Contains pages and components that all work together
+├─ routes/        # Handles app wide routing
+├─ hooks/         # App wide hook managemt
+├─ services/      # API calls and integrations
+├─ store/         # State management (e.g., Redux)
+├─ types/         # TypeScript types
+├─ utils/         # Helper functions
+└─ main.tsx       # App entry point
+```
+
+---
+
+## Technologies Used
+
+* [Vite](https://vitejs.dev/) – Frontend build tool
+* [React](https://reactjs.org/) – UI library
+* [TypeScript](https://www.typescriptlang.org/) – Typed JavaScript
+* [Tailwind CSS](https://tailwindcss.com/) – Utility-first styling (optional)
+* [React Router](https://reactrouter.com/) – Client-side routing
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature/my-feature`
+3. Make your changes and commit: `git commit -m "Add feature"`
+4. Push to your branch: `git push origin feature/my-feature`
+5. Open a Pull Request
+
+---
+
+**SwifPass Business** – Secure, fast, and user-friendly onboarding and business management.

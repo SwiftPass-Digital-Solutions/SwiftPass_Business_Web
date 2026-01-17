@@ -2,8 +2,8 @@ import { FC } from "react";
 import styles from "./styles.module.css";
 import { capitalizeFirstLetter } from "@/utils";
 import { Menu } from "lucide-react";
-import { useLocation } from "react-router";
-import { NAV_DESCRIPTION, NAV_HEADER } from "@/constants";
+import { useLocation, useNavigate } from "react-router";
+import { APP_PATHS, NAV_DESCRIPTION, NAV_HEADER } from "@/constants";
 import { NotificationBell } from "@/assets/svgs";
 import { useAppSelector } from "@/store";
 
@@ -18,6 +18,7 @@ const Header: FC<{
   const subtitle = (pathname?.split("/")[2] as NavDescKey) || "";
   const { businessName } = useAppSelector((state) => state.auth);
   const maintitle = subtitle || title;
+  const navigate = useNavigate();
 
   const getHeaderText = () => {
     const header = NAV_HEADER[maintitle];
@@ -67,9 +68,12 @@ const Header: FC<{
         </div>
 
         <div className=" flex items-center gap-7.5">
-          <div className="flex items-center gap-4 ml-auto">
+          <button
+            onClick={() => navigate(APP_PATHS.NOTIFICATIONS)}
+            className="flex bg-transparent border-none items-center gap-4 ml-auto cursor-pointer"
+          >
             <NotificationBell />
-          </div>
+          </button>
         </div>
       </header>
 

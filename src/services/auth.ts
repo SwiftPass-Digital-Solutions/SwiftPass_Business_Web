@@ -29,7 +29,7 @@ export const authService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body: values,
       }),
-      invalidatesTags: ["DashboardStatus"],
+      invalidatesTags: ["DashboardStatus", "Notifications"],
       transformResponse: (response: ResponseBody<LoginData>) => response,
     }),
     forgotPassword: builder.mutation({
