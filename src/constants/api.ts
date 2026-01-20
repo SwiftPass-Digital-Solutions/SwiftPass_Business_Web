@@ -39,6 +39,8 @@ export const endpoints = {
   },
   apiManagement: {
     getCustomers: "/api-management/customers",
+    getCustomersDetails: (customerId: string) =>
+      `/api-management/customers/${customerId}`,
   },
   notifications: {
     getNotifications: "/notifications",

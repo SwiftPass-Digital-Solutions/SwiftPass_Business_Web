@@ -92,17 +92,23 @@ const DocumentImageRow = ({
   });
 
   const handleClick = () => {
-    if (verificationStatus !== DocumentStatusEnum.NotSubmitted) {
-      if (documentUrl) {
-        setSelectedDoc?.({
-          documentUrl,
-          name: getSubCategoryName(category, documentSubType),
-        });
-      }
-      toggleDrawer?.();
+    const shouldUpload =
+      verificationStatus === DocumentStatusEnum.NotSubmitted ||
+      verificationStatus === DocumentStatusEnum.Rejected;
+
+    if (shouldUpload) {
+      toggleUploadDrawer(true);
       return;
     }
-    toggleUploadDrawer(true);
+
+    if (documentUrl) {
+      setSelectedDoc?.({
+        documentUrl,
+        name: getSubCategoryName(category, documentSubType),
+      });
+    }
+
+    toggleDrawer?.();
   };
 
   return (
@@ -132,6 +138,8 @@ const DocumentImageRow = ({
             >
               {verificationStatus === DocumentStatusEnum.NotSubmitted
                 ? "Submit Documents"
+                : verificationStatus === DocumentStatusEnum.Pending
+                ? "Resubmit"
                 : "View More"}
             </button>
           </div>
