@@ -16,6 +16,7 @@ export const APP_PATHS = {
   DASHBOARD: "/dashboard",
   COMPLIANCE: "/compliance",
   DOCUMENT_CATEGORIES: "/compliance/document-categories",
+  CUSTOMERS: "/customers",
 
   // notifications
   NOTIFICATIONS: "/notifications",
@@ -40,7 +41,7 @@ export const NAV_DESCRIPTION = {
   reports:
     "Track onboarding trends, API performance, and compliance history in one place",
   customers:
-    "rack their KYC status, view documents, and monitor onboarding activity in real time",
+    "Track their KYC status, view documents, and monitor onboarding activity in real time",
   "api-&-credits": "View the details of your APIs and credits all here",
   settings:
     "Manage your business profile, team access, and account security all in one place",

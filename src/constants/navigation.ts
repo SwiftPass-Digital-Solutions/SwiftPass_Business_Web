@@ -21,7 +21,7 @@ export const dashboardNavigation = [
   },
   {
     title: "Customers",
-    url: "#",
+    url: APP_PATHS.CUSTOMERS,
     icon: Customers,
   },
   {
