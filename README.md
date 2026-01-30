@@ -79,6 +79,8 @@ The app will run at [http://localhost:3001](http://localhost:3001).
 | `/dashboard`                      | Main dashboard             |
 | `/compliance`                     | Compliance overview        |
 | `/compliance/document-categories` | Manage document categories |
+| `/customers`                      | Customer management        |
+| `/api&credits`                    | API usage and credits      |
 
 ### Notifications
 

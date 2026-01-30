@@ -27,6 +27,25 @@ interface ApiManagementCustomersDetailsResponse {
   onboardedOn: string;
 }
 
+interface GenerateApiKeyRequest {
+  environment: "Live" | "Sandbox";
+}
+
+interface GenerateApiKeyResponse {
+  status: boolean;
+  message: string;
+  traceId: string;
+  data?: {
+    apiKey: string;
+    environment: string;
+    createdAt: string;
+  };
+  error?: {
+    title: string;
+    message: string;
+  };
+}
+
 export const apiManagementService = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     customers: builder.query({
@@ -51,8 +70,43 @@ export const apiManagementService = apiSlice.injectEndpoints({
         response: ResponseBody<ApiManagementCustomersDetailsResponse>
       ) => response,
     }),
+
+    revokeApiKey: builder.mutation({
+      query: (body: GenerateApiKeyRequest) => ({
+        url: endpoints.apiManagement.revokeApiKey,
+        method: REQUEST_METHODS.POST,
+        body: body,
+      }),
+      invalidatesTags: ["Credits", "DashboardStatus"],
+      transformResponse: (response: GenerateApiKeyResponse) => response,
+    }),
+
+    generateApiKey: builder.mutation({
+      query: (body: GenerateApiKeyRequest) => ({
+        url: endpoints.apiManagement.generateApiKey,
+        method: REQUEST_METHODS.POST,
+        body: body,
+      }),
+      invalidatesTags: ["Credits", "DashboardStatus"],
+      transformResponse: (response: GenerateApiKeyResponse) => response,
+    }),
+
+    regenerateApiKey: builder.mutation({
+      query: (body: GenerateApiKeyRequest) => ({
+        url: endpoints.apiManagement.regenerateApiKey,
+        method: REQUEST_METHODS.POST,
+        body: body,
+      }),
+      invalidatesTags: ["Credits", "DashboardStatus"],
+      transformResponse: (response: GenerateApiKeyResponse) => response,
+    }),
   }),
 });
 
-export const { useCustomersQuery, useCustomersDetailsQuery } =
-  apiManagementService;
+export const {
+  useCustomersQuery,
+  useCustomersDetailsQuery,
+  useGenerateApiKeyMutation,
+  useRegenerateApiKeyMutation,
+  useRevokeApiKeyMutation,
+} = apiManagementService;

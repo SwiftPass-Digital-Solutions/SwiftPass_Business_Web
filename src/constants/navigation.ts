@@ -26,7 +26,7 @@ export const dashboardNavigation = [
   },
   {
     title: "API & Credits",
-    url: "#",
+    url: APP_PATHS.API_CREDITS,
     icon: ApiCredit,
   },
   // {
@@ -36,7 +36,7 @@ export const dashboardNavigation = [
   // },
   {
     title: "Settings",
-    url: "#",
+    url: APP_PATHS.SETTINGS,
     icon: Settings,
   },
 ];
