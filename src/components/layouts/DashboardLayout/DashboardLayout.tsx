@@ -13,7 +13,7 @@ const DashboardLayout = () => {
 
   // const dispatch = useAppDispatch();
 
-  const sideBarWidth = useMemo(() => (sidebarOpen ? 256 : 80), [sidebarOpen]);
+  const sideBarWidth = useMemo(() => (sidebarOpen ? 303 : 80), [sidebarOpen]);
 
   const handleToggleDrawer = useCallback(
     () => setMobileSidebarOpen((prev) => !prev),
@@ -30,7 +30,7 @@ const DashboardLayout = () => {
           />
           <motion.div
             transition={{ delay: 100 }}
-            className={`${styles["container"]} grow flex flex-col ml-auto z-10 relative max-w-full md:max-w-[calc(100%-var(--sidebar-width))]`}
+            className={`${styles["container"]} grow flex flex-col z-10 relative`}
             style={
               { "--sidebar-width": `${sideBarWidth}px` } as React.CSSProperties
             }
@@ -39,7 +39,7 @@ const DashboardLayout = () => {
               sideNavIsOpen={sidebarOpen}
               handleToggleDrawer={handleToggleDrawer}
             />
-            <div className="flex-1 p-7.5 bg-[#ffffff]">
+            <div className="flex-1 p-7.5 bg-[#ffffff] overflow-x-hidden">
               <Outlet />
             </div>
           </motion.div>

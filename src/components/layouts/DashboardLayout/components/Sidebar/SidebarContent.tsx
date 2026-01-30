@@ -31,6 +31,11 @@ const SidebarContent: React.FC<{
   const { businessName, email } = useAppSelector((state) => state.auth);
   const { dashboardData } = useDashboardStatus();
   const navigate = useNavigate();
+  const showUploadButton = React.useMemo(() => {
+    if (!dashboardData) return false;
+    const status = String(dashboardData.status || "").toLowerCase();
+    return !dashboardData.hasUploadedDocuments && status !== "completed";
+  }, [dashboardData]);
 
   const dashboardPaths: INavItem[] = useMemo(() => {
     return dashboardNavigation || [];
@@ -119,16 +124,16 @@ const SidebarContent: React.FC<{
             </div>
             <h3 className="text-lg font-medium">{businessName}</h3>
             <p>{email}</p>
-            {!dashboardData?.hasUploadedDocuments && (
-              <div className="mt-4">
-                <Button
-                  variant="outlined"
-                  text="Upload documents"
-                  onClick={() => navigate(APP_PATHS.COMPLIANCE)}
-                  textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
-                />
-              </div>
-            )}
+              {showUploadButton && (
+                <div className="mt-4">
+                  <Button
+                    variant="outlined"
+                    text="Upload documents"
+                    onClick={() => navigate(APP_PATHS.COMPLIANCE)}
+                    textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
+                  />
+                </div>
+              )}
           </div>
         </div>
       </motion.div>

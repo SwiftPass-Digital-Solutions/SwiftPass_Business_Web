@@ -5,4 +5,11 @@
 
 .container {
   position: relative;
+  margin-left: 0;
+}
+
+@media (min-width: 768px) {
+  .container {
+    margin-left: var(--sidebar-width);
+  }
 }

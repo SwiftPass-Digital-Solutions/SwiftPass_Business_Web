@@ -36,11 +36,24 @@ const Compliance = lazy(
 const DocumentCategories = lazy(
   () => import("../features/compliance/components/DocumentCategories")
 );
+const ApiCredits = lazy(
+  () => import("../features/api&credits/components/API & Credits")
+);
 const Notifications = lazy(
   () => import("../features/notifications/components/Notifications")
 );
 const Customers = lazy(
   () => import("../features/customers/components/Customers")
+);
+const Settings = lazy(() => import("../features/settings/components/Settings"));
+const SettingsTeam = lazy(
+  () => import("../features/settings/components/SettingsTeam")
+);
+const SettingsNotification = lazy(
+  () => import("../features/settings/components/SettingsNotification")
+);
+const SettingsPrivacy = lazy(
+  () => import("../features/settings/components/SettingsPrivacy")
 );
 
 const AppRoutes = () => {
@@ -70,6 +83,20 @@ const AppRoutes = () => {
             />
             <Route path={APP_PATHS.NOTIFICATIONS} element={<Notifications />} />
             <Route path={APP_PATHS.CUSTOMERS} element={<Customers />} />
+            <Route path={APP_PATHS.API_CREDITS} element={<ApiCredits />} />
+            <Route path={APP_PATHS.SETTINGS} element={<Settings />} />
+            <Route
+              path={`${APP_PATHS.SETTINGS}/team-management`}
+              element={<SettingsTeam />}
+            />
+            <Route
+              path={`${APP_PATHS.SETTINGS}/notification-preferences`}
+              element={<SettingsNotification />}
+            />
+            <Route
+              path={`${APP_PATHS.SETTINGS}/privacy-security`}
+              element={<SettingsPrivacy />}
+            />
           </Route>
         </Route>
       </Routes>
