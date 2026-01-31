@@ -217,7 +217,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
     }
 
     try {
-      const res = await buyCredits(payload).unwrap();
+      await buyCredits(payload).unwrap();
       // on success, close this modal and show transactions (pass selected values)
       onClose();
       if (typeof onShowTransactions === "function") {
@@ -253,7 +253,8 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
   // Initialize selected package once packages load
   useEffect(() => {
     if (selectedPackage === null && creditPackages.length > 0) {
-      setSelectedPackage(creditPackages[0].id);
+      const first = creditPackages[0];
+      if (first) setSelectedPackage(first.id);
     }
   }, [creditPackages, selectedPackage]);
 
@@ -418,10 +419,14 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
                   
                   <div className="flex items-center gap-2">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <rect width="24" height="24" rx="4" fill="#00C3F7"/>
-                      <path d="M7 12h3M7 9h3M7 15h3" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                      <rect x="13" y="8" width="4" height="8" rx="1" fill="white"/>
-                    </svg>
+
+        <rect x="0" y="0" width="20" height="4" rx="1" fill="#00A8E8" />
+        <rect x="0" y="6" width="20" height="4" rx="1" fill="#00A8E8" />
+        <rect x="0" y="12" width="16" height="4" rx="1" fill="#00A8E8" />
+        <rect x="0" y="18" width="12" height="4" rx="1" fill="#00A8E8" />
+      </svg>
+                    
+                    
                     <span className="text-lg font-semibold text-black [font-family:'Archivo',Helvetica]">
                       paystack
                     </span>

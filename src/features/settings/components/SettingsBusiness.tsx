@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, ChangeEvent } from "react";
+import { getCookie } from "@/utils";
 import { useNavigate, useLocation } from "react-router-dom";
-import { APP_PATHS } from "@/constants";
+import { APP_PATHS, endpoints } from "@/constants";
+import { PageLoader } from "@/components";
 
 interface TabItem {
   id: string;
@@ -16,8 +18,31 @@ interface ProfileField {
   isEditable: boolean;
 }
 
+type BusinessProfile = {
+  businessId: number;
+  logoUrl: string | null;
+  businessName: string;
+  registrationNumber: string;
+  businessType: string;
+  businessTypeDisplay: string;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  isActive: boolean;
+  onboardingStatus: string;
+};
+
+type ProfileApiResponse = {
+  status: boolean;
+  message: string;
+  traceId?: string;
+  data: BusinessProfile;
+};
+
 const SettingsBusiness = () => {
   const [activeTab, setActiveTab] = useState("business-profile");
+  const [profile, setProfile] = useState<BusinessProfile | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -48,41 +73,41 @@ const SettingsBusiness = () => {
     },
   ];
 
-  const profileFields: ProfileField[] = [
+  const profileFields = (profile: BusinessProfile | null): ProfileField[] => [
     {
       id: "logo",
       label: "Logo",
-      value: "",
+      value: profile?.logoUrl ?? "",
       isEditable: true,
     },
     {
       id: "business-name",
       label: "Business Name",
-      value: "FinTrust Ltd",
+      value: profile?.businessName ?? "",
       isEditable: true,
     },
     {
       id: "registration-number",
       label: "Registration Number",
-      value: "RC-102938",
+      value: profile?.registrationNumber ?? "",
       isEditable: true,
     },
     {
       id: "business-type",
       label: "Business Type",
-      value: "Limited Liability",
+      value: profile?.businessTypeDisplay ?? profile?.businessType ?? "",
       isEditable: true,
     },
     {
       id: "contact-email",
       label: "Contact Email",
-      value: "support@fintrust.com",
+      value: profile?.contactEmail ?? "N/A",
       isEditable: true,
     },
     {
       id: "phone",
       label: "Phone",
-      value: "+234 800 123 4567",
+      value: profile?.contactPhone ?? "N/A",
       isEditable: true,
     },
   ];
@@ -99,15 +124,182 @@ const SettingsBusiness = () => {
     else setActiveTab(path);
   }, [location.pathname]);
 
+  useEffect(() => {
+    let cancelled = false;
+    const fetchProfile = async () => {
+      setLoading(true);
+      setError(null);
+        try {
+          const token = getCookie("_tk");
+          const headers: Record<string, string> = { "Content-Type": "application/json" };
+          if (token) headers.Authorization = `Bearer ${token}`;
+
+          const res = await fetch(endpoints.business.profile, {
+            method: "GET",
+            headers,
+            credentials: "include",
+          });
+        if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
+        const json = (await res.json()) as ProfileApiResponse;
+        if (!cancelled) {
+          if (json && json.status && json.data) setProfile(json.data);
+          else setError(json?.message ?? "Failed to load business profile");
+        }
+      } catch (err: any) {
+        if (!cancelled) setError(err?.message ?? "Failed to fetch business profile");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const handleSelectLogo = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) uploadLogo(file);
+    // reset input so same file can be re-selected later
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const uploadLogo = async (fileOrUrl: File | string) => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    try {
+      const token = getCookie("_tk");
+      const headers: Record<string, string> = {};
+      let body: BodyInit;
+
+      if (typeof fileOrUrl === "string") {
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify({ logoUrl: fileOrUrl });
+      } else {
+        const fd = new FormData();
+        fd.append("logo", fileOrUrl);
+        body = fd;
+      }
+
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(endpoints.business.logo, {
+        method: "PUT",
+        headers,
+        body,
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
+      const json = await res.json();
+      if (!cancelled) {
+        if (json && json.status && json.data) setProfile(json.data);
+        else setError(json?.message ?? "Failed to upload logo");
+      }
+    } catch (err: any) {
+      if (!cancelled) setError(err?.message ?? "Failed to upload logo");
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  };
+
   const handleEditClick = (fieldId: string) => {
     console.log(`Edit clicked for field: ${fieldId}`);
   };
 
+  const renderedFields = loading ? (
+    <div>Loading...</div>
+  ) : error ? (
+    <div className="text-red-600">{error}</div>
+  ) : (
+    profileFields(profile).map((field) => (
+      <div
+        key={field.id}
+        className="flex items-center gap-[204px] px-0 py-4 relative self-stretch w-full flex-[0_0_auto]"
+      >
+        <label
+          htmlFor={field.id}
+          className="relative flex items-center justify-center w-40 [font-family:'Archivo',Helvetica] font-normal text-textblacksecondary text-sm tracking-[-0.42px] leading-[20.3px]"
+        >
+          {field.label}
+        </label>
+
+        <div className="flex w-[322px] items-center justify-between relative">
+          <div className="flex w-60 items-center gap-1.5 relative">
+            {field.id === "logo" ? (
+              <div className="flex items-center gap-2">
+                {profile?.logoUrl ? (
+                  <img
+                    src={profile.logoUrl}
+                    alt="Business logo"
+                    className="w-8 h-8 rounded-2xl object-cover"
+                  />
+                ) : (
+                  <div
+                    className="relative w-8 h-8 bg-[#d9d9d9] rounded-2xl aspect-[1]"
+                    aria-label="Business logo placeholder"
+                  />
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={onFileChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const url = window.prompt("Enter logo URL:", profile?.logoUrl ?? "");
+                    if (url) uploadLogo(url);
+                  }}
+                  className="text-xs text-blue-600"
+                >
+                  Use URL
+                </button>
+              </div>
+            ) : (
+              <div
+                id={field.id}
+                className="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-textblackprimary text-sm text-center tracking-[-0.42px] leading-[20.3px] whitespace-nowrap"
+              >
+                {field.value}
+              </div>
+            )}
+          </div>
+
+          {field.isEditable && (
+            <button
+              type="button"
+              onClick={() => (field.id === "logo" ? handleSelectLogo() : handleEditClick(field.id))}
+              className="inline-flex h-8 items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-primitives-neutral-neutral-300 rounded-lg border border-solid border-primitives-neutral-neutral-600 shadow-[0px_2px_0px_#dcdcdc]"
+              aria-label={`Edit ${field.label}`}
+            >
+              <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
+                Edit
+              </span>
+            </button>
+          )}
+        </div>
+      </div>
+    ))
+  );
+
   return (
-    <div
-      className="flex flex-col items-start relative bg-white"
-      data-model-id="114:226"
-    >
+    <>
+      {loading && <PageLoader />}
+      <div
+        className="flex flex-col items-start relative bg-white"
+        data-model-id="114:226"
+      >
       <nav className="flex flex-col items-start justify-center gap-2.5 p-4 relative self-stretch w-full flex-[0_0_auto]">
         <div
           className="inline-flex items-start gap-0.5 p-1 relative flex-[0_0_auto] bg-neutral-50 rounded-lg"
@@ -142,53 +334,11 @@ const SettingsBusiness = () => {
 
       <main className="flex flex-col items-start gap-4 relative self-stretch w-full flex-[0_0_auto]">
         <section className="flex flex-col items-start px-4 py-0 relative self-stretch w-full flex-[0_0_auto]">
-          {profileFields.map((field) => (
-            <div
-              key={field.id}
-              className="flex items-center gap-[204px] px-0 py-4 relative self-stretch w-full flex-[0_0_auto]"
-            >
-              <label
-                htmlFor={field.id}
-                className="relative flex items-center justify-center w-40 [font-family:'Archivo',Helvetica] font-normal text-textblacksecondary text-sm tracking-[-0.42px] leading-[20.3px]"
-              >
-                {field.label}
-              </label>
-
-              <div className="flex w-[322px] items-center justify-between relative">
-                <div className="flex w-60 items-center gap-1.5 relative">
-                  {field.id === "logo" ? (
-                    <div
-                      className="relative w-8 h-8 bg-[#d9d9d9] rounded-2xl aspect-[1]"
-                      aria-label="Business logo placeholder"
-                    />
-                  ) : (
-                    <div
-                      id={field.id}
-                      className="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-textblackprimary text-sm text-center tracking-[-0.42px] leading-[20.3px] whitespace-nowrap"
-                    >
-                      {field.value}
-                    </div>
-                  )}
-                </div>
-
-                {field.isEditable && (
-                  <button
-                    type="button"
-                    onClick={() => handleEditClick(field.id)}
-                    className="inline-flex h-8 items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-primitives-neutral-neutral-300 rounded-lg border border-solid border-primitives-neutral-neutral-600 shadow-[0px_2px_0px_#dcdcdc]"
-                    aria-label={`Edit ${field.label}`}
-                  >
-                    <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
-                      Edit
-                    </span>
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
+          {renderedFields}
         </section>
       </main>
-    </div>
+      </div>
+    </>
   );
 };
 export default SettingsBusiness

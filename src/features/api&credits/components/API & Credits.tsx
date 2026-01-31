@@ -5,6 +5,7 @@ import BuyCreditsModal from "./BuyCreditsModal";
 import Transactions from "./Transactions";
 import { useGenerateApiKeyMutation, useRegenerateApiKeyMutation, useRevokeApiKeyMutation } from "@/services/api-management";
 import { useAppSelector } from "@/store";
+import { useDashboardStatus } from "@/hooks";
 import { getCookie } from "@/utils";
 import { PageLoader } from "@/components";
 import { CreditsBarChart } from "@/features/shared";
@@ -674,6 +675,10 @@ const Api_credits = () => {
     [creditsAnalytics?.data]
   );
 
+  // Dashboard status (approval counts)
+  const { dashboardData } = useDashboardStatus();
+  const approvedDocumentsCount = dashboardData?.approvedDocumentsCount ?? 0;
+
   return (
     <>
       {analyticsLoading && <PageLoader />}
@@ -705,64 +710,76 @@ const Api_credits = () => {
               ))}
             </div>
 
+            {/* API Keys area: show improved pending-approval UI when approvedDocumentsCount !== 4 */}
             <section className="flex flex-col gap-5 p-6 w-full bg-white rounded-[28px] border border-solid border-[#efefef]">
               <header className="flex justify-between w-full items-center">
                 <div className="inline-flex justify-center gap-3 items-center">
-                  <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-xl tracking-[-0.60px] leading-[normal] whitespace-nowrap">
-                    API Keys &amp; Access
-                  </h1>
+                  <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-xl tracking-[-0.60px] leading-[normal] whitespace-nowrap">API Keys &amp; Access</h1>
 
-                  <div
-                    className="inline-flex justify-center gap-1.5 px-2 py-1 bg-[#effff2] rounded-[999px] items-center"
-                    role="status"
-                    aria-label="Verification status"
-                  >
-                    <div
-                      className="w-1.5 h-1.5 bg-[#00a821] rounded-[3px]"
-                      aria-hidden="true"
-                    />
-                    <div className="[font-family:'Archivo',Helvetica] font-normal text-[#00a821] text-sm tracking-[-0.42px] leading-[normal] whitespace-nowrap">
-                      Verified
-                    </div>
+                  <div className="inline-flex justify-center gap-1.5 px-2 py-1 bg-[#effff2] rounded-[999px] items-center" role="status" aria-label="Verification status">
+                    <div className="w-1.5 h-1.5 bg-[#00a821] rounded-[3px]" aria-hidden="true" />
+                    <div className="[font-family:'Archivo',Helvetica] font-normal text-[#00a821] text-sm tracking-[-0.42px] leading-[normal] whitespace-nowrap">Verified</div>
                   </div>
                 </div>
 
                 <div className="inline-flex gap-2 items-center">
-                  <button
-                    className="inline-flex justify-center gap-2.5 p-3 bg-[#f0f0f0] rounded-xl border border-solid border-[#dcdcdc] shadow-[0px_2px_0px_#dcdcdc] items-center cursor-pointer hover:bg-[#f5f5f5] active:shadow-none active:translate-y-[2px] transition-all"
-                    onClick={openRevokeModal}
-                    aria-label="Revoke API key"
+                  <button 
+                    className="inline-flex justify-center gap-2.5 p-3 bg-[#f0f0f0] rounded-xl border border-solid border-[#dcdcdc] shadow-[0px_2px_0px_#dcdcdc] items-center cursor-pointer hover:bg-[#f5f5f5] active:shadow-none active:translate-y-[2px] transition-all" 
+                    onClick={approvedDocumentsCount !== 4 ? undefined : openRevokeModal}
+                    aria-label="Revoke API key" 
                     type="button"
                   >
-                    <span className="[font-family:'Archivo',Helvetica] font-medium text-black text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
-                      Revoke key
-                    </span>
+                    <span className="[font-family:'Archivo',Helvetica] font-medium text-black text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">Revoke key</span>
                   </button>
 
-                  <button
-                    className="inline-flex justify-center gap-2.5 p-3 bg-[#0a51db] rounded-xl border border-solid border-[#0844c4] shadow-[0px_2px_0px_#dcdcdc] items-center cursor-pointer hover:bg-[#0a3fc9] active:shadow-none active:translate-y-[2px] transition-all"
-                    onClick={openGenerateModal}
-                    aria-label={apiKeys.length > 0 ? "Regenerate API key" : "Generate new API key"}
+                  <button 
+                    className="inline-flex justify-center gap-2.5 p-3 bg-[#0a51db] rounded-xl border border-solid border-[#0844c4] shadow-[0px_2px_0px_#dcdcdc] items-center cursor-pointer hover:bg-[#0a3fc9] active:shadow-none active:translate-y-[2px] transition-all" 
+                    onClick={approvedDocumentsCount !== 4 ? undefined : openGenerateModal}
+                    aria-label={apiKeys.length > 0 ? "Regenerate API key" : "Generate new API key"} 
                     type="button"
                   >
                     <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
-                      {apiKeys.length > 0 ? "Regenerate new key" : "Generate new key"}
+                      {approvedDocumentsCount !== 4 ? "Generate new key" : (apiKeys.length > 0 ? "Regenerate new key" : "Generate new key")}
                     </span>
                   </button>
                 </div>
               </header>
 
-              <div className="flex flex-col gap-5 w-full">
-                {apiKeys.length === 0 ? (
-                  <div className="flex items-center justify-center py-8 text-gray-400">
-                    <p className="text-sm">No API keys generated yet</p>
-                  </div>
-                ) : (
-                  apiKeys.map((keyObj, index) => (
-                    <ApiKeyCard key={index} keyObj={keyObj} index={index} onCopy={handleCopyKey} />
-                  ))
-                )}
+              {approvedDocumentsCount !== 4 ? (
+        <div className="border-2 border-blue-500 rounded-lg bg-blue-50/30 p-12">
+          <div className="flex flex-col items-center justify-center text-center">
+            {/* Blurred API Key */}
+            <div className="mb-6">
+              <div className="text-2xl font-mono text-gray-300 blur-[6px] select-none mb-1">
+                sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxx
               </div>
+              
+            </div>
+
+            {/* Hourglass Emoji */}
+            <div className="mb-6 text-3xl">
+              ⌛️
+            </div>
+
+            {/* Message Text */}
+            <p className="text-lg text-gray-700 font-normal">
+              These will be generated as soon as you're approved!
+            </p>
+          </div>
+        </div>
+              ) : (
+                <div className="flex flex-col gap-5 w-full">
+                  {apiKeys.length === 0 ? (
+                    <div className="flex items-center justify-center py-8 text-gray-400">
+                      <p className="text-sm">No API keys generated yet</p>
+                    </div>
+                  ) : (
+                    apiKeys.map((keyObj, index) => (
+                      <ApiKeyCard key={index} keyObj={keyObj} index={index} onCopy={handleCopyKey} />
+                    ))
+                  )}
+                </div>
+              )}
             </section>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5 w-full">
