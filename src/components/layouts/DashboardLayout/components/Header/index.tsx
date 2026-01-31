@@ -19,9 +19,19 @@ const Header: FC<{
   const { businessName } = useAppSelector((state) => state.auth);
   const maintitle = subtitle || title;
   const navigate = useNavigate();
+  // map settings sub-routes back to the main `settings` nav key
+  const settingsSubkeys = [
+    "business-profile",
+    "team-management",
+    "notification-preferences",
+    "privacy-security",
+  ];
+  const headerLookupKey = settingsSubkeys.includes(maintitle)
+    ? "settings"
+    : (maintitle as keyof typeof NAV_HEADER);
 
   const getHeaderText = () => {
-    const header = NAV_HEADER[maintitle];
+    const header = NAV_HEADER[headerLookupKey];
 
     if (!header) return "";
 
@@ -61,7 +71,7 @@ const Header: FC<{
                 {getHeaderText()}
               </p>
               <p className="text-base text-[#737373] font-normal">
-                {NAV_DESCRIPTION[maintitle]}
+                {NAV_DESCRIPTION[headerLookupKey as keyof typeof NAV_DESCRIPTION]}
               </p>
             </div>
           </div>
@@ -80,7 +90,7 @@ const Header: FC<{
       <div className="block md:hidden mx-8 mt-6">
         <p className="text-[#030303] text-xl font-medium">{getHeaderText()}</p>
         <p className="text-sm text-[#737373] font-normal">
-          {NAV_DESCRIPTION[maintitle]}
+          {NAV_DESCRIPTION[headerLookupKey as keyof typeof NAV_DESCRIPTION]}
         </p>
       </div>
 

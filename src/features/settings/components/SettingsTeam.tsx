@@ -182,7 +182,7 @@ const SettingsTeam = () => {
             </div>
           </div>
 
-          <div className="flex w-[1028px] items-center relative flex-[0_0_auto] ml-[-1.50px] mr-[-1.50px] bg-white rounded-xl overflow-hidden border border-solid border-[#f7f7f7]">
+          <div className="flex flex-col md:flex-row w-full items-center relative bg-white rounded-xl overflow-hidden border border-solid border-[#f7f7f7]">
             <div className="flex flex-col items-start relative flex-1 grow">
               <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
                 <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
