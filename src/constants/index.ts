@@ -17,9 +17,11 @@ export const APP_PATHS = {
   COMPLIANCE: "/compliance",
   DOCUMENT_CATEGORIES: "/compliance/document-categories",
   CUSTOMERS: "/customers",
+  API_CREDITS: "/api&credits",
 
   // notifications
   NOTIFICATIONS: "/notifications",
+  SETTINGS: "/settings",
 };
 
 export const MAX_COOKIES_AGE = 3600 * 24;
@@ -42,7 +44,7 @@ export const NAV_DESCRIPTION = {
     "Track onboarding trends, API performance, and compliance history in one place",
   customers:
     "Track their KYC status, view documents, and monitor onboarding activity in real time",
-  "api-&-credits": "View the details of your APIs and credits all here",
+  "api&credits": "View the details of your APIs and credits all here",
   settings:
     "Manage your business profile, team access, and account security all in one place",
   "document-categories": "View your full categories",
@@ -54,11 +56,12 @@ export const NAV_HEADER = {
   "knowledge-base": "Internal wiki and support documentation",
   compliance: "Stay compliant. Stay trusted.",
   customers: "Manage all customers onboarded through SwiftPass",
-  "api-&-credits": "APIs & Credits",
+  "api&credits": "APIs & Credits",
   reports: "Insights that keep you informed",
   settings: "Customize and secure your SwiftPass experience",
   "document-categories": "Document Categories",
   notifications: "Notifications",
+  api_credit: "API & Credits"
 };
 
 export const categories = [
