@@ -36,6 +36,10 @@ export const endpoints = {
   dashboard: {
     status: `${BASE_API_URL}/identity/business/status`,
   },
+  business: {
+    profile: `${BASE_API_URL}/business/settings/profile`,
+    logo: `${BASE_API_URL}/business/settings/profile/logo`,
+  },
   credits: {
     analytics: `${BASE_API_URL}/credits/dashboard-analytics`,
     packages: `${BASE_API_URL}/credits/packages`,
