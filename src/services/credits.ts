@@ -37,16 +37,16 @@ export const creditService = apiSlice.injectEndpoints({
         url: endpoints.credits.analytics,
         method: REQUEST_METHODS.GET,
       }),
-      providesTags: ["Credits", "DashboardStatus"],
+      providesTags: [ "DashboardStatus","Credits"],
       transformResponse: (response: ResponseBody<DashboardAnalyticsResponse>) =>
         response,
     }),
     creditsAnalytics: builder.query({
       query: () => ({
-        url: endpoints.credits.analytics,
+        url: endpoints.credits.creditanalytics,
         method: REQUEST_METHODS.GET,
       }),
-      providesTags: ["Credits"],
+      providesTags: ["DashboardStatus","Credits"],
       transformResponse: (response: ResponseBody<CreditsAnalyticsResponse>) =>
         response,
     }),
