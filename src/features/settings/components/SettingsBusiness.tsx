@@ -123,28 +123,31 @@ const SettingsBusiness = () => {
     if (!path || path === "" || path === "business-profile") setActiveTab("business-profile");
     else setActiveTab(path);
   }, [location.pathname]);
+  // Helper: fetch latest profile data
+  const getProfile = async (): Promise<BusinessProfile> => {
+    const token = getCookie("_tk");
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(endpoints.business.profile, {
+      method: "GET",
+      headers,
+      credentials: "include",
+    });
+    if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
+    const json = (await res.json()) as ProfileApiResponse;
+    if (json && json.status && json.data) return json.data;
+    throw new Error(json?.message ?? "Failed to load business profile");
+  };
 
   useEffect(() => {
     let cancelled = false;
-    const fetchProfile = async () => {
+    const load = async () => {
       setLoading(true);
       setError(null);
-        try {
-          const token = getCookie("_tk");
-          const headers: Record<string, string> = { "Content-Type": "application/json" };
-          if (token) headers.Authorization = `Bearer ${token}`;
-
-          const res = await fetch(endpoints.business.profile, {
-            method: "GET",
-            headers,
-            credentials: "include",
-          });
-        if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
-        const json = (await res.json()) as ProfileApiResponse;
-        if (!cancelled) {
-          if (json && json.status && json.data) setProfile(json.data);
-          else setError(json?.message ?? "Failed to load business profile");
-        }
+      try {
+        const data = await getProfile();
+        if (!cancelled) setProfile(data);
       } catch (err: any) {
         if (!cancelled) setError(err?.message ?? "Failed to fetch business profile");
       } finally {
@@ -152,7 +155,7 @@ const SettingsBusiness = () => {
       }
     };
 
-    fetchProfile();
+    load();
     return () => {
       cancelled = true;
     };
@@ -201,8 +204,16 @@ const SettingsBusiness = () => {
       if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
       const json = await res.json();
       if (!cancelled) {
-        if (json && json.status && json.data) setProfile(json.data);
-        else setError(json?.message ?? "Failed to upload logo");
+        if (json && json.status && json.data) {
+          // re-fetch authoritative profile after upload so the component updates
+          try {
+            const updated = await getProfile();
+            if (!cancelled) setProfile(updated);
+          } catch (_err) {
+            // fallback to response data if refetch fails
+            if (!cancelled) setProfile(json.data);
+          }
+        } else setError(json?.message ?? "Failed to upload logo");
       }
     } catch (err: any) {
       if (!cancelled) setError(err?.message ?? "Failed to upload logo");
@@ -255,7 +266,7 @@ const SettingsBusiness = () => {
                   className="hidden"
                   onChange={onFileChange}
                 />
-                <button
+                {/* <button
                   type="button"
                   onClick={() => {
                     const url = window.prompt("Enter logo URL:", profile?.logoUrl ?? "");
@@ -264,7 +275,7 @@ const SettingsBusiness = () => {
                   className="text-xs text-blue-600"
                 >
                   Use URL
-                </button>
+                </button> */}
               </div>
             ) : (
               <div

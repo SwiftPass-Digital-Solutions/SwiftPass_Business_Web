@@ -1,4 +1,4 @@
-export const BASE_API_URL = import.meta.env.VITE_API_URL;
+export const BASE_API_URL = import.meta.env.VITE_API_URL || "https://swiftpass-backend.onrender.com/api";
 export const APIM_SUB_KEY = import.meta.env.VITE_SUB_KEY || "";
 
 export const REQUEST_METHODS = {
@@ -39,9 +39,11 @@ export const endpoints = {
   business: {
     profile: `${BASE_API_URL}/business/settings/profile`,
     logo: `${BASE_API_URL}/business/settings/profile/logo`,
+    team: `${BASE_API_URL}/business/settings/team`,
   },
   credits: {
     analytics: `${BASE_API_URL}/credits/dashboard-analytics`,
+    creditanalytics: `${BASE_API_URL}/credits/analytics`,
     packages: `${BASE_API_URL}/credits/packages`,
     customPackage: `${BASE_API_URL}/credits/custom-package`,
     buy: `${BASE_API_URL}/credits/buy`,

@@ -146,6 +146,11 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
   const { data: packagesResponse, isLoading: packagesLoading, error: packagesErrorRaw } = useGetCreditPackagesQuery(undefined);
   const packagesErrorMessage = (packagesErrorRaw as any)?.data?.message || (packagesErrorRaw ? 'Failed to load packages' : null);
 
+  // DEBUG: log packages query state to help diagnose why packages may not be fetched
+  // Remove or disable in production.
+  // eslint-disable-next-line no-console
+  console.debug('[BuyCreditsModal] packagesLoading=', packagesLoading, 'packagesResponse=', packagesResponse, 'packagesError=', packagesErrorRaw);
+
   const [buyCredits, { isLoading }] = useBuyCreditsMutation();
   const [createCustomPackage, { isLoading: creatingCustom }] = useCreateCustomPackageMutation();
 
