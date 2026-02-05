@@ -40,6 +40,9 @@ export const endpoints = {
     profile: `${BASE_API_URL}/business/settings/profile`,
     logo: `${BASE_API_URL}/business/settings/profile/logo`,
     team: `${BASE_API_URL}/business/settings/team`,
+    notificationPreferences: `${BASE_API_URL}/business/settings/notification-preferences`,
+    privacySecurity: `${BASE_API_URL}/business/settings/privacy-security`,
+    toggleLoginAlerts: `${BASE_API_URL}/business/settings/privacy-security/toggle-login-alerts`,
   },
   credits: {
     analytics: `${BASE_API_URL}/credits/dashboard-analytics`,

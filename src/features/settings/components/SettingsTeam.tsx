@@ -156,8 +156,9 @@ const SettingsTeam = () => {
         role="navigation"
         aria-label="Team management navigation"
       >
+        {/* Desktop tabs */}
         <div
-          className="inline-flex items-start gap-0.5 p-1 relative flex-[0_0_auto] bg-neutral-50 rounded-lg"
+          className="hidden md:inline-flex items-start gap-0.5 p-1 relative flex-[0_0_auto] bg-neutral-50 rounded-lg"
           role="tablist"
         >
           {tabs.map((tab) => (
@@ -194,8 +195,47 @@ const SettingsTeam = () => {
             </button>
           ))}
         </div>
+
+        {/* Mobile horizontal scrollable tabs */}
+        <div className="md:hidden w-full overflow-x-auto scrollbar-hide">
+          <div className="flex items-center gap-3 min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                className={`inline-flex items-center justify-center gap-2 px-4 py-2 relative flex-[0_0_auto] rounded-lg border ${
+                  activeTab === tab.id 
+                    ? "bg-white border-gray-300" 
+                    : "bg-white border-gray-200"
+                }`}
+                onClick={() => {
+                  if (tab.id === "business-profile") navigate(`${APP_PATHS.SETTINGS}`);
+                  else navigate(`${APP_PATHS.SETTINGS}/${tab.id}`);
+                  setActiveTab(tab.id);
+                }}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                type="button"
+              >
+                <img
+                  className="relative w-5 h-5 aspect-[1]"
+                  alt={tab.iconAlt}
+                  src={tab.icon}
+                  aria-hidden="true"
+                />
+                <span
+                  className={`relative [font-family:'Archivo',Helvetica] text-sm whitespace-nowrap ${
+                    activeTab === tab.id ? "font-medium text-black" : "font-normal text-[#666]"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
       </nav>
-        {/* Team Table Content */}
+      
+      {/* Team Table Content */}
       <div className="flex flex-col items-start gap-5 relative self-stretch w-full flex-[0_0_auto]">
         <div className="flex flex-col items-start gap-2 p-5 relative self-stretch w-full flex-[0_0_auto] rounded-3xl overflow-hidden border border-solid border-primitives-neutral-neutral-600">
           <h2 className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-medium text-black text-xl tracking-[-0.60px] leading-[29.0px] whitespace-nowrap">
@@ -208,13 +248,13 @@ const SettingsTeam = () => {
               className="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]"
             >
               <div className="flex items-center gap-2.5 p-4 relative flex-1 grow bg-primitives-neutral-neutral-400 rounded-xl border border-solid border-[#efefef]">
-                <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-200 text-xl tracking-[-0.60px] leading-[29.0px] whitespace-nowrap">
+                <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-200 text-base md:text-xl tracking-[-0.60px] leading-[29.0px] whitespace-nowrap">
                   {stat.label}
                 </div>
               </div>
 
               <div className="flex items-center gap-2.5 p-4 relative flex-1 grow rounded-xl border border-solid border-[#efefef]">
-                <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-dark-dark-600 text-xl tracking-[-0.60px] leading-[29.0px] whitespace-nowrap">
+                <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-dark-dark-600 text-base md:text-xl tracking-[-0.60px] leading-[29.0px] whitespace-nowrap">
                   {stat.value}
                 </div>
               </div>
@@ -222,15 +262,15 @@ const SettingsTeam = () => {
           ))}
         </div>
 
-        <div className="flex flex-col items-center justify-center gap-5 p-6 relative self-stretch w-full flex-[0_0_auto] bg-white rounded-[36px] border border-solid border-[#efefef]">
-          <div className="flex items-center justify-between relative self-stretch w-full flex-[0_0_auto]">
+        <div className="flex flex-col items-center justify-center gap-5 p-4 md:p-6 relative self-stretch w-full flex-[0_0_auto] bg-white rounded-[36px] border border-solid border-[#efefef]">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative self-stretch w-full flex-[0_0_auto]">
             <h2 className="font-medium text-black text-xl tracking-[-0.60px] leading-[normal] relative w-fit [font-family:'Archivo',Helvetica] whitespace-nowrap">
               Team Table
             </h2>
 
             <div className="inline-flex items-center gap-2 relative flex-[0_0_auto]">
               <button
-                className="inline-flex items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-primitives-neutral-neutral-300 rounded-xl border border-solid border-primitives-neutral-neutral-600 shadow-[0px_2px_0px_#dcdcdc]"
+                className="inline-flex items-center justify-center gap-2.5 px-4 py-3 relative flex-[0_0_auto] bg-primitives-neutral-neutral-300 rounded-xl border border-solid border-primitives-neutral-neutral-600 shadow-[0px_2px_0px_#dcdcdc]"
                 onClick={() => setShowNewMember(true)}
                 type="button"
               >
@@ -239,7 +279,7 @@ const SettingsTeam = () => {
                 </span>
               </button>
 
-              <button className="inline-flex items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-primitives-primary-blue-500 rounded-xl border border-solid border-primitives-primary-blue-300 shadow-[0px_2px_0px_#dcdcdc]">
+              <button className="inline-flex items-center justify-center gap-2.5 px-4 py-3 relative flex-[0_0_auto] bg-primitives-primary-blue-500 rounded-xl border border-solid border-primitives-primary-blue-300 shadow-[0px_2px_0px_#dcdcdc]">
                 <span className="text-primitives-neutral-neutral-50 relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-medium text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
                   View all
                 </span>
@@ -252,116 +292,189 @@ const SettingsTeam = () => {
           ) : teamMembers.length === 0 && !loading ? (
             <div className="w-full py-5 text-lg text-center text-gray-500">No team members to show</div>
           ) : (
-            <div className="flex flex-col md:flex-row w-full items-center relative bg-white rounded-xl overflow-hidden border border-solid border-[#f7f7f7]">
-              <div className="flex flex-col items-start relative flex-1 grow">
-                <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
-                  <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
-                    Name
-                  </div>
-                </div>
-
-                {teamMembers.map((member, index) => (
-                  <div
-                    key={index}
-                    className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
-                  >
+            <>
+              {/* Desktop Table View */}
+              <div className="hidden md:flex flex-col md:flex-row w-full items-center relative bg-white rounded-xl overflow-hidden border border-solid border-[#f7f7f7]">
+                <div className="flex flex-col items-start relative flex-1 grow">
+                  <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
                     <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
-                      {member.name}
+                      Name
                     </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="flex flex-col items-start relative flex-1 grow">
-                <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
-                  <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
-                    Role
-                  </div>
+                  {teamMembers.map((member, index) => (
+                    <div
+                      key={index}
+                      className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
+                    >
+                      <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
+                        {member.name}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
-                {teamMembers.map((member, index) => (
-                  <div
-                    key={index}
-                    className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
-                  >
+                <div className="flex flex-col items-start relative flex-1 grow">
+                  <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
                     <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
-                      {member.role}
+                      Role
                     </div>
                   </div>
-                ))}
-              </div>
 
-              <div className="flex flex-col items-start relative flex-1 grow">
-                <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
-                  <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
-                    Status
-                  </div>
+                  {teamMembers.map((member, index) => (
+                    <div
+                      key={index}
+                      className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
+                    >
+                      <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
+                        {member.role}
+                      </div>
+                    </div>
+                  ))}
                 </div>
 
+                <div className="flex flex-col items-start relative flex-1 grow">
+                  <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
+                    <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
+                      Status
+                    </div>
+                  </div>
+
+                  {teamMembers.map((member, index) => {
+                    const statusStyles = getStatusStyles(member.status);
+                    return (
+                      <div
+                        key={index}
+                        className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
+                      >
+                        <div
+                          className={`inline-flex items-center justify-center gap-1.5 px-2 py-1 relative flex-[0_0_auto] ${statusStyles.bgColor} rounded-[999px]`}>
+                          <div
+                            className={`relative w-1.5 h-1.5 ${statusStyles.dotColor} rounded-[3px] aspect-[1]`}
+                          />
+
+                          <div
+                            className={`relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal ${statusStyles.textColor} text-sm tracking-[-0.42px] leading-[normal] whitespace-nowrap`}>
+                            {member.status}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex flex-col items-start relative flex-1 grow">
+                  <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
+                    <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
+                      Actions
+                    </div>
+                  </div>
+
+                  {teamMembers.map((member, index) => (
+                    <div
+                      key={index}
+                      className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
+                    >
+                      <div className="inline-flex items-center gap-2.5 relative flex-[0_0_auto] mt-[-4.50px] mb-[-4.50px]">
+                        <button
+                          className="inline-flex h-8 items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-primitives-neutral-neutral-300 rounded-lg border border-solid border-primitives-neutral-neutral-600 shadow-[0px_2px_0px_#dcdcdc]"
+                          onClick={() => {
+                            setEditingMember(member);
+                            setShowEditMember(true);
+                          }}
+                          type="button"
+                        >
+                          <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
+                            {member.actions[0]}
+                          </span>
+                        </button>
+
+                        <button
+                          className="inline-flex h-8 items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-[#fff4f4] rounded-lg border border-solid border-primitives-red-red-100 shadow-[0px_2px_0px_#ffb8b8]"
+                          onClick={() => startRemove(member.id, member.name)}
+                          disabled={removingId === member.id}
+                          type="button"
+                        >
+                          <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
+                            {removingId === member.id ? "Removing..." : member.actions[1]}
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Mobile Card View */}
+              <div className="flex md:hidden flex-col gap-4 w-full">
                 {teamMembers.map((member, index) => {
                   const statusStyles = getStatusStyles(member.status);
                   return (
                     <div
                       key={index}
-                      className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
+                      className="flex flex-col gap-3 p-4 bg-white rounded-2xl border border-solid border-[#f0f0f0]"
                     >
-                      <div
-                        className={`inline-flex items-center justify-center gap-1.5 px-2 py-1 relative flex-[0_0_auto] ${statusStyles.bgColor} rounded-[999px]`}>
-                        <div
-                          className={`relative w-1.5 h-1.5 ${statusStyles.dotColor} rounded-[3px] aspect-[1]`}
-                        />
-
-                        <div
-                          className={`relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal ${statusStyles.textColor} text-sm tracking-[-0.42px] leading-[normal] whitespace-nowrap`}>
-                          {member.status}
+                      <div className="flex flex-col gap-2">
+                        <div className="text-base font-medium text-black [font-family:'Archivo',Helvetica]">
+                          {member.name}
                         </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-[#666] [font-family:'Archivo',Helvetica]">
+                            Role
+                          </div>
+                          <div className="text-sm font-medium text-black [font-family:'Archivo',Helvetica]">
+                            {member.role}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="text-sm text-[#666] [font-family:'Archivo',Helvetica]">
+                            Status
+                          </div>
+                          <div
+                            className={`inline-flex items-center justify-center gap-1.5 px-2 py-1 ${statusStyles.bgColor} rounded-[999px]`}
+                          >
+                            <div
+                              className={`w-1.5 h-1.5 ${statusStyles.dotColor} rounded-[3px]`}
+                            />
+                            <div
+                              className={`[font-family:'Archivo',Helvetica] font-normal ${statusStyles.textColor} text-sm`}
+                            >
+                              {member.status}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-2 pt-2">
+                        <button
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primitives-neutral-neutral-300 rounded-lg border border-solid border-primitives-neutral-neutral-600"
+                          onClick={() => {
+                            setEditingMember(member);
+                            setShowEditMember(true);
+                          }}
+                          type="button"
+                        >
+                          <span className="[font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-sm">
+                            {member.actions[0]}
+                          </span>
+                        </button>
+
+                        <button
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#fff4f4] rounded-lg border border-solid border-primitives-red-red-100"
+                          onClick={() => startRemove(member.id, member.name)}
+                          disabled={removingId === member.id}
+                          type="button"
+                        >
+                          <span className="[font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-sm">
+                            {removingId === member.id ? "Removing..." : member.actions[1]}
+                          </span>
+                        </button>
                       </div>
                     </div>
                   );
                 })}
               </div>
-
-              <div className="flex flex-col items-start relative flex-1 grow">
-                <div className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-[#fbfbfb]">
-                  <div className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-primitives-neutral-dark-dark-300 text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
-                    Actions
-                  </div>
-                </div>
-
-                {teamMembers.map((member, index) => (
-                  <div
-                    key={index}
-                    className="flex h-[55px] items-center gap-2.5 p-4 relative self-stretch w-full bg-white border-b [border-bottom-style:solid] border-[#f4f4f4]"
-                  >
-                            <div className="inline-flex items-center gap-2.5 relative flex-[0_0_auto] mt-[-4.50px] mb-[-4.50px]">
-                            <button
-                              className="inline-flex h-8 items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-primitives-neutral-neutral-300 rounded-lg border border-solid border-primitives-neutral-neutral-600 shadow-[0px_2px_0px_#dcdcdc]"
-                              onClick={() => {
-                                setEditingMember(member);
-                                setShowEditMember(true);
-                              }}
-                              type="button"
-                            >
-                              <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
-                                {member.actions[0]}
-                              </span>
-                            </button>
-
-                      <button
-                        className="inline-flex h-8 items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-[#fff4f4] rounded-lg border border-solid border-primitives-red-red-100 shadow-[0px_2px_0px_#ffb8b8]"
-                        onClick={() => startRemove(member.id, member.name)}
-                        disabled={removingId === member.id}
-                        type="button"
-                      >
-                        <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
-                          {removingId === member.id ? "Removing..." : member.actions[1]}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            </>
           )}
         </div>
         {showNewMember && (
