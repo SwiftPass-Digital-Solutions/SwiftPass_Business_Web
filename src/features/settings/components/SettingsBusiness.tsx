@@ -222,9 +222,8 @@ const SettingsBusiness = () => {
     }
   };
 
-  const handleEditClick = (fieldId: string) => {
-    console.log(`Edit clicked for field: ${fieldId}`);
-  };
+  // NOTE: edit handling for non-logo fields is not implemented yet.
+  // Removed unused `handleEditClick` to fix TS6133 (declared but never read).
 
   const renderedFields = loading ? (
     <div>Loading...</div>

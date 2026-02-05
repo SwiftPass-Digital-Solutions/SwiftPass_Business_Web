@@ -10,7 +10,7 @@ const SettingsPrivacy = () => {
   const location = useLocation();
   const [loginAlertsEnabled, setLoginAlertsEnabled] = useState<boolean>(true);
   const [lastLoginLocation, setLastLoginLocation] = useState<string>("Lagos, Nigeria");
-  const [loading, setLoading] = useState<boolean>(false);
+  const [, setLoading] = useState<boolean>(false);
 
   const tabs = [
     {
