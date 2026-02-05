@@ -222,40 +222,39 @@ const SettingsBusiness = () => {
     }
   };
 
-  const handleEditClick = (fieldId: string) => {
-    console.log(`Edit clicked for field: ${fieldId}`);
-  };
+  // NOTE: edit handling for non-logo fields is not implemented yet.
+  // Removed unused `handleEditClick` to fix TS6133 (declared but never read).
 
   const renderedFields = loading ? (
     <div>Loading...</div>
   ) : error ? (
     <div className="text-red-600">{error}</div>
   ) : (
-    profileFields(profile).map((field) => (
+      profileFields(profile).map((field) => (
       <div
         key={field.id}
-        className="flex items-center gap-[204px] px-0 py-4 relative self-stretch w-full flex-[0_0_auto]"
+        className="flex flex-col md:flex-row md:items-center gap-3 md:gap-[204px] px-0 py-4 md:py-4 relative self-stretch w-full flex-[0_0_auto] border-b border-gray-100 last:border-b-0"
       >
         <label
           htmlFor={field.id}
-          className="relative flex items-center justify-center w-40 [font-family:'Archivo',Helvetica] font-normal text-textblacksecondary text-sm tracking-[-0.42px] leading-[20.3px]"
+          className="relative flex items-center justify-start w-full md:w-40 [font-family:'Archivo',Helvetica] font-normal text-[#666666] md:text-textblacksecondary text-[13px] md:text-sm tracking-[-0.42px] leading-[20.3px]"
         >
           {field.label}
         </label>
 
-        <div className="flex w-[322px] items-center justify-between relative">
-          <div className="flex w-60 items-center gap-1.5 relative">
+        <div className="flex w-full md:w-[322px] items-center justify-between relative">
+          <div className="flex flex-1 md:w-60 items-center gap-1.5 relative">
             {field.id === "logo" ? (
               <div className="flex items-center gap-2">
                 {profile?.logoUrl ? (
                   <img
                     src={profile.logoUrl}
                     alt="Business logo"
-                    className="w-8 h-8 rounded-2xl object-cover"
+                    className="w-10 h-10 md:w-8 md:h-8 rounded-2xl object-cover"
                   />
                 ) : (
                   <div
-                    className="relative w-8 h-8 bg-[#d9d9d9] rounded-2xl aspect-[1]"
+                    className="relative w-10 h-10 md:w-8 md:h-8 bg-[#d9d9d9] rounded-2xl aspect-[1]"
                     aria-label="Business logo placeholder"
                   />
                 )}
@@ -266,39 +265,49 @@ const SettingsBusiness = () => {
                   className="hidden"
                   onChange={onFileChange}
                 />
-                {/* <button
-                  type="button"
-                  onClick={() => {
-                    const url = window.prompt("Enter logo URL:", profile?.logoUrl ?? "");
-                    if (url) uploadLogo(url);
-                  }}
-                  className="text-xs text-blue-600"
-                >
-                  Use URL
-                </button> */}
               </div>
             ) : (
               <div
                 id={field.id}
-                className="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-textblackprimary text-sm text-center tracking-[-0.42px] leading-[20.3px] whitespace-nowrap"
+                className="relative flex items-center justify-start md:justify-center w-full md:w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-[#1a1a1a] md:text-textblackprimary text-[15px] md:text-sm text-left md:text-center tracking-[-0.42px] leading-[20.3px] break-words md:whitespace-nowrap"
               >
                 {field.value}
               </div>
             )}
           </div>
 
-          {field.isEditable && (
-            <button
-              type="button"
-              onClick={() => (field.id === "logo" ? handleSelectLogo() : handleEditClick(field.id))}
-              className="inline-flex h-8 items-center justify-center gap-2.5 p-3 relative flex-[0_0_auto] bg-primitives-neutral-neutral-300 rounded-lg border border-solid border-primitives-neutral-neutral-600 shadow-[0px_2px_0px_#dcdcdc]"
-              aria-label={`Edit ${field.label}`}
-            >
-              <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-neutral-1000 text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
-                Edit
-              </span>
-            </button>
-          )}
+          {field.isEditable ? (
+            field.id === "logo" ? (
+              <button
+                type="button"
+                onClick={() => handleSelectLogo()}
+                className="inline-flex h-8 md:h-8 items-center justify-center gap-2.5 px-4 md:p-3 relative flex-[0_0_auto] bg-white md:bg-primitives-neutral-neutral-300 rounded-lg border border-solid border-[#e5e5e5] md:border-primitives-neutral-neutral-600 shadow-sm md:shadow-[0px_2px_0px_#dcdcdc]"
+                aria-label={`Edit ${field.label}`}
+              >
+                <span className="relative w-fit mt-[-5.50px] mb-[-3.50px] [font-family:'Archivo',Helvetica] font-medium text-[#1a1a1a] md:text-primitives-neutral-neutral-1000 text-[13px] md:text-xs tracking-[-0.36px] leading-[17.4px] whitespace-nowrap">
+                  Edit
+                </span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="inline-flex h-8 items-center justify-center gap-2.5 px-3 md:p-3 relative flex-[0_0_auto] bg-[#f5f5f5] md:bg-primitives-neutral-neutral-200 rounded-lg border border-solid border-[#e5e5e5] md:border-primitives-neutral-neutral-600 shadow-sm md:shadow-[0px_2px_0px_#dcdcdc] opacity-80 cursor-not-allowed"
+                aria-label={`Locked ${field.label}`}
+                title="Locked"
+              >
+                    <img
+                      className="relative w-3 h-3 aspect-[1]"
+                      alt=""
+                      src="https://c.animaapp.com/sYjJLP8g/img/vuesax-linear-lock-4.svg"
+                      aria-hidden="true"
+                    />
+                    <span className="relative flex items-center justify-center w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-normal text-black text-[13px] md:text-sm text-center tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
+                      Locked
+                    </span>
+              </button>
+            )
+          ) : null}
         </div>
       </div>
     ))
@@ -308,12 +317,14 @@ const SettingsBusiness = () => {
     <>
       {loading && <PageLoader />}
       <div
-        className="flex flex-col items-start relative bg-white"
+        className="flex flex-col items-start relative bg-white min-h-screen"
         data-model-id="114:226"
       >
-      <nav className="flex flex-col items-start justify-center gap-2.5 p-4 relative self-stretch w-full flex-[0_0_auto]">
+
+      {/* Navigation Tabs */}
+      <nav className="flex flex-col items-start justify-center gap-2.5 px-4 py-2 md:p-4 relative self-stretch w-full flex-[0_0_auto] overflow-x-auto">
         <div
-          className="inline-flex items-start gap-0.5 p-1 relative flex-[0_0_auto] bg-neutral-50 rounded-lg"
+          className="inline-flex items-start gap-0.5 p-1 relative flex-[0_0_auto] bg-neutral-50 rounded-lg overflow-x-auto md:overflow-visible w-full md:w-auto"
           role="tablist"
         >
           {tabs.map((tab) => (
@@ -322,7 +333,7 @@ const SettingsBusiness = () => {
               role="tab"
               aria-selected={activeTab === tab.id}
               onClick={() => handleTabClick(tab.id)}
-              className={`inline-flex items-center justify-center gap-1 px-3 py-1 relative flex-[0_0_auto] rounded-md ${
+              className={`inline-flex items-center justify-center gap-1 px-3 py-1 relative flex-[0_0_auto] rounded-md whitespace-nowrap ${
                 activeTab === tab.id ? "bg-white shadow-sescy" : ""
               }`}
             >
@@ -332,7 +343,7 @@ const SettingsBusiness = () => {
                 src={tab.icon}
               />
               <span
-                className={`w-fit mt-[-2.00px] whitespace-nowrap relative [font-family:'Archivo',Helvetica] font-normal text-sm tracking-[-0.42px] leading-[20.3px] ${
+                className={`w-fit mt-[-2.00px] whitespace-nowrap relative [font-family:'Archivo',Helvetica] font-normal text-[13px] md:text-sm tracking-[-0.42px] leading-[20.3px] ${
                   activeTab === tab.id ? "text-black" : "text-[#494949]"
                 }`}
               >
@@ -343,7 +354,8 @@ const SettingsBusiness = () => {
         </div>
       </nav>
 
-      <main className="flex flex-col items-start gap-4 relative self-stretch w-full flex-[0_0_auto]">
+      {/* Main Content */}
+      <main className="flex flex-col items-start gap-0 md:gap-4 relative self-stretch w-full flex-[0_0_auto]">
         <section className="flex flex-col items-start px-4 py-0 relative self-stretch w-full flex-[0_0_auto]">
           {renderedFields}
         </section>
@@ -353,72 +365,3 @@ const SettingsBusiness = () => {
   );
 };
 export default SettingsBusiness
-// const SettingsBusiness = () => {
-//   const [activeTab, setActiveTab] = React.useState('business')
-
-//   return (
-//     <div className="px-12 py-8 text-gray-900 font-sans">
-//       <div className="flex gap-3 mb-[22px]" role="tablist">
-//         <button 
-//           className={activeTab === 'business' 
-//             ? "bg-white rounded-[10px] px-3.5 py-2 shadow-md text-slate-800 border border-sky-500/[0.06]" 
-//             : "bg-transparent border border-transparent px-3.5 py-2 rounded-[10px] text-gray-500 cursor-pointer"
-//           } 
-//           onClick={() => setActiveTab('business')}
-//         >
-//           Business Profile
-//         </button>
-//         <button 
-//           className={activeTab === 'team' 
-//             ? "bg-white rounded-[10px] px-3.5 py-2 shadow-md text-slate-800 border border-sky-500/[0.06]" 
-//             : "bg-transparent border border-transparent px-3.5 py-2 rounded-[10px] text-gray-500 cursor-pointer"
-//           } 
-//           onClick={() => setActiveTab('team')}
-//         >
-//           Team Management
-//         </button>
-//         <button 
-//           className={activeTab === 'notification' 
-//             ? "bg-white rounded-[10px] px-3.5 py-2 shadow-md text-slate-800 border border-sky-500/[0.06]" 
-//             : "bg-transparent border border-transparent px-3.5 py-2 rounded-[10px] text-gray-500 cursor-pointer"
-//           } 
-//           onClick={() => setActiveTab('notification')}
-//         >
-//           Notification Preferences
-//         </button>
-//         <button 
-//           className={activeTab === 'privacy' 
-//             ? "bg-white rounded-[10px] px-3.5 py-2 shadow-md text-slate-800 border border-sky-500/[0.06]" 
-//             : "bg-transparent border border-transparent px-3.5 py-2 rounded-[10px] text-gray-500 cursor-pointer"
-//           } 
-//           onClick={() => setActiveTab('privacy')}
-//         >
-//           Privacy & Security
-//         </button>
-//       </div>
-
-//       <div className="flex gap-7 items-start">
-//         <div className="flex-1">
-//           <div className="flex items-center gap-3 mb-2.5">
-//             <div className="w-14 h-14 rounded-full bg-gray-100" />
-//             <button className="ml-auto px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white cursor-pointer">Edit</button>
-//           </div>
-
-//           <div className="mt-2">
-//             {fields.map((f) => (
-//               <div key={f.label} className="grid grid-cols-[220px_1fr_96px] items-center gap-3 py-3.5 border-b border-gray-100">
-//                 <div className="text-gray-500 text-sm">{f.label}</div>
-//                 <div className="text-gray-900 text-sm">{f.value}</div>
-//                 <div className="text-right">
-//                   <button className="px-3 py-2 rounded-lg border border-gray-200 bg-white cursor-pointer">Edit</button>
-//                 </div>
-//               </div>
-//             ))}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   )
-// }
-
-
