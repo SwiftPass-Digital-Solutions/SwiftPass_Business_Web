@@ -188,11 +188,9 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
                 className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-4 py-3 font-['Archivo'] text-base text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select role</option>
-                <option value="admin">Admin</option>
-                <option value="team members">Team Members</option>
-                <option value="developer">Developer</option>
-                <option value="designer">Designer</option>
-                <option value="member">Member</option>
+                <option value="1">Admin</option>
+                <option value="2">ComplianceOfficer</option>
+                <option value="3">FinanceManager</option>
               </select>
               <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
                 <svg

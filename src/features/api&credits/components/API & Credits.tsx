@@ -307,10 +307,10 @@ const Api_credits = () => {
             </div>
 
             {/* API Keys area: show improved pending-approval UI when approvedDocumentsCount !== 4 */}
-            <section className="flex flex-col gap-5 p-6 w-full bg-white rounded-[28px] border border-solid border-[#efefef]">
-              <header className="flex justify-between w-full items-center">
-                <div className="inline-flex justify-center gap-3 items-center">
-                  <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-xl tracking-[-0.60px] leading-[normal] whitespace-nowrap">API Keys &amp; Access</h1>
+            <section className="flex flex-col gap-5 p-4 sm:p-6 w-full bg-white rounded-[28px] border border-solid border-[#efefef]">
+                <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-lg sm:text-xl tracking-[-0.60px] leading-[normal]">API Keys &amp; Access</h1>
 
               
                     
@@ -324,9 +324,9 @@ const Api_credits = () => {
                 
                 </div>
 
-                <div className="inline-flex gap-2 items-center">
+                <div className="flex flex-col sm:flex-row gap-2 items-center w-full sm:w-auto">
 <button 
-  className={`inline-flex justify-center gap-2.5 p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
+  className={`inline-flex w-full sm:w-auto justify-center gap-2.5 p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
     approvedDocumentsCount !== 4 
       ? 'bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed' 
       : 'bg-[#f0f0f0] border-[#dcdcdc] cursor-pointer hover:bg-[#f5f5f5] active:shadow-none active:translate-y-[2px]'
@@ -339,44 +339,44 @@ const Api_credits = () => {
   <span className="[font-family:'Archivo',Helvetica] font-medium text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">Revoke key</span>
 </button>
 
-<button 
-  className={`inline-flex justify-center gap-2.5 p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
-    approvedDocumentsCount !== 4 
-      ? 'bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed' 
-      : 'bg-[#0a51db] border-[#0844c4] cursor-pointer hover:bg-[#0a3fc9] active:shadow-none active:translate-y-[2px]'
-  }`}
-  onClick={openGenerateModal}
-  disabled={approvedDocumentsCount !== 4}
-  aria-label={apiKeys.length > 0 ? "Regenerate API key" : "Generate new API key"} 
-  type="button"
->
-  <span className={`[font-family:'Archivo',Helvetica] font-medium text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap ${
-    approvedDocumentsCount !== 4 ? 'text-gray-500' : 'text-white'
-  }`}>
-    {approvedDocumentsCount !== 4 ? "Generate new key" : (apiKeys.length > 0 ? "Regenerate new key" : "Generate new key")}
-  </span>
-</button>
+                <button 
+                  className={`inline-flex w-full sm:w-auto justify-center gap-2.5 p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
+                    approvedDocumentsCount !== 4 
+                      ? 'bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed' 
+                      : 'bg-[#0a51db] border-[#0844c4] cursor-pointer hover:bg-[#0a3fc9] active:shadow-none active:translate-y-[2px]'
+                  }`}
+                  onClick={openGenerateModal}
+                  disabled={approvedDocumentsCount !== 4}
+                  aria-label={apiKeys.length > 0 ? "Regenerate API key" : "Generate new API key"} 
+                  type="button"
+                >
+                  <span className={`[font-family:'Archivo',Helvetica] font-medium text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap ${
+                    approvedDocumentsCount !== 4 ? 'text-gray-500' : 'text-white'
+                  }`}>
+                    {approvedDocumentsCount !== 4 ? "Generate new key" : (apiKeys.length > 0 ? "Regenerate new key" : "Generate new key")}
+                  </span>
+                </button>
                 </div>
               </header>
 
               {approvedDocumentsCount !== 4 ? (
-        <div className="border-2 border-blue-500 rounded-lg bg-blue-50/30 p-12">
+        <div className="border-2 border-blue-500 rounded-lg bg-blue-50/30 p-8 sm:p-12">
           <div className="flex flex-col items-center justify-center text-center">
             {/* Blurred API Key */}
-            <div className="mb-6">
-              <div className="text-2xl font-mono text-gray-300 blur-[6px] select-none mb-1">
+            <div className="mb-4 sm:mb-6">
+              <div className="text-xl sm:text-2xl font-mono text-gray-300 blur-[6px] select-none mb-1">
                 sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxx
               </div>
-              
+
             </div>
 
             {/* Hourglass Emoji */}
-            <div className="mb-6 text-3xl">
+            <div className="mb-4 sm:mb-6 text-2xl sm:text-3xl">
               ⌛️
             </div>
 
             {/* Message Text */}
-            <p className="text-lg text-gray-700 font-normal">
+            <p className="text-base sm:text-lg text-gray-700 font-normal">
               These will be generated as soon as you're approved!
             </p>
           </div>
@@ -436,10 +436,10 @@ const Api_credits = () => {
 
           <section className="flex flex-col gap-5 p-6 w-full bg-white rounded-[36px] border border-[#efefef]">
             <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3">
-              <h2 className="text-xl font-medium">Billing & History Table</h2>
-              <div className="flex items-center gap-2">
-                <button onClick={openHistoryModal} className="px-4 py-3 bg-gray-200 rounded-xl font-medium text-sm">View more</button>
-                <button onClick={openBuyCreditsModal} className="px-4 py-3 bg-blue-600 text-white rounded-xl font-medium text-sm">Buy more credits</button>
+              <h2 className="text-lg sm:text-xl font-medium">Billing & History Table</h2>
+              <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <button onClick={openHistoryModal} className="w-full sm:w-auto px-4 py-3 bg-gray-200 rounded-xl font-medium text-sm">View more</button>
+                <button onClick={openBuyCreditsModal} className="w-full sm:w-auto px-4 py-3 bg-blue-600 text-white rounded-xl font-medium text-sm">Buy more credits</button>
               </div>
             </header>
 
