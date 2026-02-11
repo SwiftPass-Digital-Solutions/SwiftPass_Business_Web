@@ -30,7 +30,7 @@ const CreditsBarChart: React.FC<CreditsBarChartProps> = ({
   return (
     <div className="w-full h-[200px] font-archivo">
     
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height={200}>
         <BarChart
           data={data}
           layout="vertical"

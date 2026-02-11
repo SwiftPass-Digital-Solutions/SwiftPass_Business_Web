@@ -77,7 +77,7 @@ export const apiManagementService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body: body,
       }),
-      invalidatesTags: ["Credits", "DashboardStatus"],
+      invalidatesTags: [],
       transformResponse: (response: GenerateApiKeyResponse) => response,
     }),
 
@@ -87,7 +87,7 @@ export const apiManagementService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body: body,
       }),
-      invalidatesTags: ["Credits", "DashboardStatus"],
+      invalidatesTags: [],
       transformResponse: (response: GenerateApiKeyResponse) => response,
     }),
 
@@ -97,7 +97,7 @@ export const apiManagementService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body: body,
       }),
-      invalidatesTags: ["Credits", "DashboardStatus"],
+      invalidatesTags: [],
       transformResponse: (response: GenerateApiKeyResponse) => response,
     }),
   }),
