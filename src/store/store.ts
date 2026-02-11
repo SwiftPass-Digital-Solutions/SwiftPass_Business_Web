@@ -68,6 +68,9 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
+      immutableCheck: false, // Disable it entirely
+      // OR increase the threshold:
+      // immutableCheck: { warnAfter: 128 },
     }).concat(apiSlice.middleware),
 });
 
