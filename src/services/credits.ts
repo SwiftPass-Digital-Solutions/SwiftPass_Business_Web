@@ -46,7 +46,7 @@ export const creditService = apiSlice.injectEndpoints({
         url: endpoints.credits.creditanalytics,
         method: REQUEST_METHODS.GET,
       }),
-      providesTags: ["DashboardStatus","Credits"],
+      providesTags: [],
       transformResponse: (response: ResponseBody<CreditsAnalyticsResponse>) =>
         response,
     }),
@@ -55,7 +55,7 @@ export const creditService = apiSlice.injectEndpoints({
         url: endpoints.credits.packages,
         method: REQUEST_METHODS.GET,
       }),
-      providesTags: ["Credits"],
+      providesTags: [],
       transformResponse: (response: ResponseBody<Array<{ id: number; name: string; credits: number; amount: number }>>) => response,
     }),
     createCustomPackage: builder.mutation({
@@ -64,7 +64,7 @@ export const creditService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body,
       }),
-      invalidatesTags: ["Credits"],
+      invalidatesTags: [],
       transformResponse: (response: ResponseBody<{ id: number; name: string; credits: number; amount: number }>) => response,
     }),
     buyCredits: builder.mutation({
@@ -73,7 +73,7 @@ export const creditService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body,
       }),
-      invalidatesTags: ["Credits"],
+      invalidatesTags: [],
       transformResponse: (response: ResponseBody<boolean>) => response,
     }),
   }),

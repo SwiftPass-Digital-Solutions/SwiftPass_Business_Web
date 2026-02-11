@@ -25,8 +25,6 @@ interface BuyCreditsModalProps {
   onShowTransactions?: (data?: { credits: number; amount: number }) => void;
 }
 
-// Packages fetched from API will populate this state
-
 const PAYMENT_METHODS: PaymentMethod[] = [
   {
     id: "card",
@@ -42,9 +40,6 @@ const PAYMENT_METHODS: PaymentMethod[] = [
   },
 ];
 
-// package IDs come from the API; no static map needed
-
-// Loading Spinner Component
 const LoadingSpinner = () => (
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
@@ -52,7 +47,6 @@ const LoadingSpinner = () => (
   </svg>
 );
 
-// Memoized Credit Package Component
 const CreditPackageOption = React.memo(({ 
   pkg, 
   isSelected, 
@@ -98,7 +92,6 @@ const CreditPackageOption = React.memo(({
 
 CreditPackageOption.displayName = "CreditPackageOption";
 
-// Memoized Payment Method Component
 const PaymentMethodOption = React.memo(({ 
   method, 
   isSelected, 
@@ -146,15 +139,9 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
   const { data: packagesResponse, isLoading: packagesLoading, error: packagesErrorRaw } = useGetCreditPackagesQuery(undefined);
   const packagesErrorMessage = (packagesErrorRaw as any)?.data?.message || (packagesErrorRaw ? 'Failed to load packages' : null);
 
-  // DEBUG: log packages query state to help diagnose why packages may not be fetched
-  // Remove or disable in production.
-  // eslint-disable-next-line no-console
-  console.debug('[BuyCreditsModal] packagesLoading=', packagesLoading, 'packagesResponse=', packagesResponse, 'packagesError=', packagesErrorRaw);
-
   const [buyCredits, { isLoading }] = useBuyCreditsMutation();
   const [createCustomPackage, { isLoading: creatingCustom }] = useCreateCustomPackageMutation();
 
-  // Memoized callbacks to prevent recreation
   const handleSelectPackage = useCallback((packageId: number) => {
     setSelectedPackage(packageId);
   }, []);
@@ -206,7 +193,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
       ? { packageId: 0, customAmount: Number(customAmount) || 0 }
       : { packageId: selectedPackage || 0, customAmount: 0 };
 
-    // determine credits and amount to pass to transactions
     let creditsToPass = 0;
     let amountToPass = 0;
     if (showCustomAmount) {
@@ -223,13 +209,11 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
 
     try {
       await buyCredits(payload).unwrap();
-      // on success, close this modal and show transactions (pass selected values)
       onClose();
       if (typeof onShowTransactions === "function") {
         onShowTransactions({ credits: creditsToPass, amount: amountToPass });
       }
     } catch (err: any) {
-      // handle error (showing a simple alert here)
       if (err?.status === 401) {
         alert("Session expired. Please login again.");
       } else {
@@ -238,24 +222,22 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
     }
   }, [showCustomAmount, customAmount, customCredits, selectedPackage, buyCredits, onClose, onShowTransactions, packagesResponse]);
 
-  // Memoize package options render
-  
+  // ✅ Memoize credit packages mapping
+  const creditPackages: CreditPackage[] = useMemo(() => {
+    const _raw = packagesResponse?.data;
+    const _rawPackages = Array.isArray(_raw) ? _raw : [];
+    return _rawPackages.map((p: any, idx: number) => ({
+      id: Number(p.id),
+      label: String(p.name || `Package ${p.id}`),
+      credits: `${p.credits ?? 0} Credits`,
+      price: `₦${Number(p.amount ?? 0).toLocaleString()}`,
+      emoji: idx === 0 ? '👋' : idx === 1 ? '💃' : '🔥',
+      badgeColor: idx === 0 ? '#b9b8b8' : idx === 1 ? '#147fea' : '#ff1212',
+      borderColor: idx === 0 ? '#b9b8b8' : idx === 1 ? '#147fea' : '#ff1212',
+      backgroundColor: idx === 0 ? '#fcfcfc' : idx === 1 ? '#f0f7fd' : '#fff4f4',
+    }));
+  }, [packagesResponse]);
 
-  // Map API response into UI-friendly package objects (safe access)
-  const _raw = packagesResponse?.data;
-  const _rawPackages = Array.isArray(_raw) ? _raw : [];
-  const creditPackages: CreditPackage[] = _rawPackages.map((p: any, idx: number) => ({
-    id: Number(p.id),
-    label: String(p.name || `Package ${p.id}`),
-    credits: `${p.credits ?? 0} Credits`,
-    price: `₦${Number(p.amount ?? 0).toLocaleString()}`,
-    emoji: idx === 0 ? '👋' : idx === 1 ? '💃' : '🔥',
-    badgeColor: idx === 0 ? '#b9b8b8' : idx === 1 ? '#147fea' : '#ff1212',
-    borderColor: idx === 0 ? '#b9b8b8' : idx === 1 ? '#147fea' : '#ff1212',
-    backgroundColor: idx === 0 ? '#fcfcfc' : idx === 1 ? '#f0f7fd' : '#fff4f4',
-  }));
-
-  // Initialize selected package once packages load
   useEffect(() => {
     if (selectedPackage === null && creditPackages.length > 0) {
       const first = creditPackages[0];
@@ -263,7 +245,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
     }
   }, [creditPackages, selectedPackage]);
 
-  // Memoize package options render
   const packageOptions = useMemo(() => (
     creditPackages.map((pkg) => (
       <CreditPackageOption
@@ -275,7 +256,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
     ))
   ), [creditPackages, selectedPackage, handleSelectPackage]);
 
-  // Memoize payment method options render
   const paymentOptions = useMemo(() => (
     PAYMENT_METHODS.map((method) => (
       <PaymentMethodOption
@@ -291,14 +271,12 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300"
         onClick={onClose}
         aria-hidden="true"
       />
 
-      {/* Slide-in Panel */}
       <div
         className={`fixed top-4 right-4 bottom-4 w-full sm:w-[640px] bg-white rounded-3xl shadow-2xl z-[70] transform transition-transform duration-300 ease-out overflow-hidden ${
           open ? "translate-x-0" : "translate-x-full"
@@ -424,13 +402,11 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({ open, onClose, onShow
                   
                   <div className="flex items-center gap-2">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-
-        <rect x="0" y="0" width="20" height="4" rx="1" fill="#00A8E8" />
-        <rect x="0" y="6" width="20" height="4" rx="1" fill="#00A8E8" />
-        <rect x="0" y="12" width="16" height="4" rx="1" fill="#00A8E8" />
-        <rect x="0" y="18" width="12" height="4" rx="1" fill="#00A8E8" />
-      </svg>
-                    
+                      <rect x="0" y="0" width="20" height="4" rx="1" fill="#00A8E8" />
+                      <rect x="0" y="6" width="20" height="4" rx="1" fill="#00A8E8" />
+                      <rect x="0" y="12" width="16" height="4" rx="1" fill="#00A8E8" />
+                      <rect x="0" y="18" width="12" height="4" rx="1" fill="#00A8E8" />
+                    </svg>
                     
                     <span className="text-lg font-semibold text-black [font-family:'Archivo',Helvetica]">
                       paystack

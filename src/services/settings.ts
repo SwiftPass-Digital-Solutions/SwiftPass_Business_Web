@@ -1,5 +1,6 @@
 import { endpoints } from "@/constants";
 import { getAuthHeaders } from "@/utils/api";
+import { BusinessRoleEnum } from "@/constants/enums";
 
 export interface TeamMemberApi {
   id: number;
@@ -42,7 +43,14 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
     id: d.id,
     name: d.fullName && d.fullName.trim().length > 0 ? d.fullName : d.email,
     email: d.email,
-    role: d.roleDisplay || d.role || "Member",
+    role:
+      d.roleDisplay ||
+      (typeof d.role === "number"
+        ? (BusinessRoleEnum[d.role as unknown as number] as string)
+        : typeof d.role === "string" && /^\d+$/.test(d.role)
+        ? (BusinessRoleEnum[Number(d.role)] as string)
+        : d.role) ||
+      "Member",
     status: d.status || (d.isActive ? "Active" : "Inactive"),
     actions: ["Edit", "Remove"],
   }));

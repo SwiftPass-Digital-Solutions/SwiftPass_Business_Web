@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 // removed remote analytics hook to avoid calling external analytics endpoint
 import HistoryModal from "./HistoryModal";
 import BuyCreditsModal from "./BuyCreditsModal";
 import Transactions from "./Transactions";
 import { useGenerateApiKeyMutation, useRegenerateApiKeyMutation, useRevokeApiKeyMutation } from "@/services/api-management";
+import { toast } from "react-toastify";
 import { useAppSelector } from "@/store";
 import { useDashboardStatus } from "@/hooks";
 import { getCookie } from "@/utils";
@@ -86,32 +87,7 @@ const Api_credits = () => {
     })) || [];
   }, [analytics?.recentCreditHistory]);
 
-  const [apiKeys, setApiKeys] = useState<{ key: string; type: string; revoked?: boolean }[]>(() => {
-    // Load API keys from localStorage on initial render
-    const savedKeys = localStorage.getItem('apiKeys');
-    return savedKeys ? JSON.parse(savedKeys) : [];
-  });
-
-  // Debounced localStorage save using useRef to avoid recreating the timeout on every render
-  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  useEffect(() => {
-    // Clear existing timeout
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-    
-    // Set new timeout to debounce localStorage writes
-    saveTimeoutRef.current = setTimeout(() => {
-      localStorage.setItem('apiKeys', JSON.stringify(apiKeys));
-    }, 500); // Wait 500ms after last change
-
-    // Cleanup on unmount
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current);
-      }
-    };
-  }, [apiKeys]);
+  const [apiKeys, setApiKeys] = useState<{ key: string; type: string; revoked?: boolean }[]>([]);
 
   // Full history modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -149,9 +125,8 @@ const Api_credits = () => {
 
   // Modal state for generating/regenerating keys
   const [showGenerateModal, setShowGenerateModal] = useState<boolean>(false);
-  const [selectedEnvs, setSelectedEnvs] = useState<{ Live: boolean; Sandbox: boolean }>({
+  const [selectedEnvs, setSelectedEnvs] = useState<{ Live: boolean }>({
     Live: true,
-    Sandbox: false,
   });
   const [modalStep, setModalStep] = useState<number>(1);
   const [lastGeneratedKeys, setLastGeneratedKeys] = useState<{ key: string; type: string }[] | null>(null);
@@ -159,7 +134,7 @@ const Api_credits = () => {
   const [lastRevokedEnvs, setLastRevokedEnvs] = useState<string[] | null>(null);
 
   const openGenerateModal = useCallback(() => {
-    setSelectedEnvs({ Live: true, Sandbox: false });
+    setSelectedEnvs({ Live: true });
     setModalStep(1);
     setModalMode('generate');
     setShowGenerateModal(true);
@@ -168,27 +143,36 @@ const Api_credits = () => {
   const closeGenerateModal = useCallback(() => setShowGenerateModal(false), []);
 
   const openRevokeModal = useCallback(() => {
-    setSelectedEnvs({ Live: false, Sandbox: false });
+    setSelectedEnvs({ Live: false });
     setModalStep(1);
     setModalMode('revoke');
     setShowGenerateModal(true);
   }, []);
 
-  const toggleEnv = useCallback((env: "Live" | "Sandbox") => {
-    setSelectedEnvs((s) => ({ ...s, [env]: !s[env] }));
+  const toggleEnv = useCallback((_env?: "Live") => {
+    setSelectedEnvs((s) => ({ Live: !s.Live }));
   }, []);
 
   const handleCopyKey = useCallback((key: string) => {
     navigator.clipboard.writeText(key);
   }, []);
 
-  const handleRevokeSelected = useCallback(async (environments: ("Live" | "Sandbox")[]) => {
+  const handleRevokeSelected = useCallback(async (environments: ("Live")[]) => {
     if (!loggedIn) return;
 
     try {
       const promises = environments.map((env) => revokeApiKey({ environment: env }));
-      await Promise.all(promises);
+      const results = await Promise.all(promises as Promise<any>[]);
 
+      // Show any error messages from the API
+      results.forEach((res: any) => {
+        const message = res?.data?.message || res?.error?.data?.message || res?.error?.message;
+        if (message && !(res?.data?.status)) {
+          toast.error(message);
+        }
+      });
+
+      // mark keys revoked locally if API calls succeeded
       setApiKeys(prev => {
         const typesToMark = environments.map((e) => `${e} Key`);
         return prev.map((k) => (typesToMark.includes(k.type) ? { ...k, revoked: true } : k));
@@ -198,10 +182,11 @@ const Api_credits = () => {
       setModalStep(3);
     } catch (err) {
       console.error("Failed to revoke selected keys:", err);
+      toast.error((err as any)?.message || "Failed to revoke selected keys");
     }
   }, [loggedIn, revokeApiKey]);
 
-  const handleGenerateNewKey = useCallback(async (environments: ("Live" | "Sandbox")[] = ["Live", "Sandbox"]) => {
+  const handleGenerateNewKey = useCallback(async (environments: ("Live")[] = ["Live"]) => {
     if (!loggedIn || !getCookie("_tk")) return;
 
     try {
@@ -214,13 +199,17 @@ const Api_credits = () => {
         promises.push(isRegenerating ? regenerateApiKey({ environment: env }) : generateApiKey({ environment: env }));
       }
 
-      const results = await Promise.all(promises);
+      const results = await Promise.all(promises as Promise<any>[]);
       const newKeys: { key: string; type: string; revoked?: boolean }[] = [];
 
       for (let i = 0; i < results.length; i++) {
         const res = results[i];
         if (!res.error && res.data?.status && res.data?.data?.apiKey) {
           newKeys.push({ key: res.data.data.apiKey, type: `${envOrder[i]} Key`, revoked: false });
+        } else {
+          // Show API error message if present
+          const message = res?.data?.message || res?.error?.data?.message || res?.error?.message;
+          if (message) toast.error(message);
         }
       }
 
@@ -231,6 +220,7 @@ const Api_credits = () => {
       }
     } catch (error) {
       console.error("Failed to generate/regenerate API keys:", error);
+      toast.error((error as any)?.message || "Failed to generate/regenerate API keys");
     }
   }, [loggedIn, apiKeys.length, regenerateApiKey, generateApiKey]);
 
@@ -246,17 +236,15 @@ const Api_credits = () => {
   const handleModalNext = useCallback(() => setModalStep(2), []);
   
   const handleModalGenerateKey = useCallback(async () => {
-    const envs: ("Live" | "Sandbox")[] = [];
+    const envs: ("Live")[] = [];
     if (selectedEnvs.Live) envs.push("Live");
-    if (selectedEnvs.Sandbox) envs.push("Sandbox");
     if (envs.length === 0) return;
     await handleGenerateNewKey(envs);
   }, [selectedEnvs, handleGenerateNewKey]);
 
   const handleModalRevokeKey = useCallback(async () => {
-    const envs: ("Live" | "Sandbox")[] = [];
+    const envs: ("Live")[] = [];
     if (selectedEnvs.Live) envs.push("Live");
-    if (selectedEnvs.Sandbox) envs.push("Sandbox");
     if (envs.length === 0) return;
     await handleRevokeSelected(envs);
   }, [selectedEnvs, handleRevokeSelected]);

@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { getAuthHeaders } from "@/utils/api";
 import { endpoints } from "@/constants";
+import { BusinessRoleEnum } from "@/constants/enums";
 
 export type MemberFormData = {
   id?: number;
   fullName: string;
   workEmail: string;
   phoneNumber: string;
-  role: string;
+  role: BusinessRoleEnum | "";
   note: string;
 };
 
@@ -36,6 +37,14 @@ export const Frame: React.FC<{
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+    if (name === "role") {
+      setFormData((prev) => ({
+        ...prev,
+        role: value === "" ? "" : (Number(value) as BusinessRoleEnum),
+      }));
+      return;
+    }
+
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -245,11 +254,9 @@ export const Frame: React.FC<{
                 className="w-full appearance-none rounded-lg border border-gray-200 bg-white px-4 py-3 font-['Archivo'] text-base text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select role</option>
-                <option value="admin">Admin</option>
-                <option value="team members">Team Members</option>
-                <option value="developer">Developer</option>
-                <option value="designer">Designer</option>
-                <option value="member">Member</option>
+                <option value={BusinessRoleEnum.Admin}>Admin</option>
+                <option value={BusinessRoleEnum.ComplianceOfficer}>Compliance Officer</option>
+                <option value={BusinessRoleEnum.FinanceManager}>Finance Manager</option>
               </select>
               <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
                 <svg

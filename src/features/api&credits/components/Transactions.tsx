@@ -102,6 +102,9 @@ const Transactions: React.FC<TransactionsProps> = ({ open, onClose, history, sel
     return d.toLocaleDateString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   }, [tx?.createdAt, tx?.date]);
 
+  // Generate a stable temporary transaction id to display immediately
+  const tempTransactionId = useMemo(() => `pending_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,6)}`, []);
+
   const formatAmount = useCallback((amt: any) => {
     const n = Number(amt ?? 0);
     return `₦${n.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
@@ -209,8 +212,8 @@ const Transactions: React.FC<TransactionsProps> = ({ open, onClose, history, sel
   if (!open) return null;
 
   const orderDetails = [
-    { label: 'Transaction Date', value: tx ? formattedDate : ' - ' },
-    { label: 'Transaction ID', value: tx?.transactionId ?? tx?.id ?? ' - ' },
+    { label: 'Transaction Date', value: formattedDate },
+    { label: 'Transaction ID', value: tx?.transactionId ?? tx?.id ?? tempTransactionId },
     { label: 'Customer Email', value: fetchedEmail ?? tx?.customerEmail ?? tx?.email ?? ' - ' },
     { label: 'Customer Name', value: tx?.customerName ?? tx?.name ?? ' - ' },
     { label: 'Credit Unit', value: String(selectedCredits ?? (tx?.credits ?? tx?.creditUnit ?? ' - ')) },
@@ -222,10 +225,10 @@ const Transactions: React.FC<TransactionsProps> = ({ open, onClose, history, sel
     <>
       {!showSuccessFrame && <div className="fixed inset-0 bg-black/40 z-[60] transition-opacity duration-300" onClick={handleClose} aria-hidden="true" />}
 
-      {!showSuccessFrame && <div className={`fixed top-4 right-4 bottom-4 w-full sm:w-[640px] bg-white rounded-3xl shadow-2xl z-[70] transform transition-transform duration-300 ease-out overflow-hidden ${open ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="flex flex-col h-full">
-          <div className="overflow-hidden p-8">
-            <div className="flex flex-col w-[609px] items-start justify-between relative self-stretch">
+      {!showSuccessFrame && <div className={`fixed top-4 left-4 right-4 bottom-4 sm:left-auto sm:right-4 sm:w-[640px] bg-white rounded-3xl shadow-2xl z-[70] transform transition-transform duration-300 ease-out overflow-y-auto ${open ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="flex flex-col h-full overflow-y-auto">
+          <div className="p-8">
+            <div className="flex flex-col w-full max-w-[609px] items-start justify-between relative self-stretch">
               <div className="flex flex-col items-start gap-4 relative self-stretch w-full flex-[0_0_auto]">
                 <div className="flex flex-col items-start gap-8 relative self-stretch w-full flex-[0_0_auto]">
                   <header className="flex flex-col items-start gap-4 relative self-stretch w-full flex-[0_0_auto]">
