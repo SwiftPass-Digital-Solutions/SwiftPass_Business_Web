@@ -144,8 +144,8 @@ PaymentMethodOption.displayName = "PaymentMethodOption";
 const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   open,
   onClose,
-  onShowTransactions,
-  onPaymentSuccess,
+  onShowTransactions: _onShowTransactions,
+  onPaymentSuccess: _onPaymentSuccess,
 }) => {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string>("card");
