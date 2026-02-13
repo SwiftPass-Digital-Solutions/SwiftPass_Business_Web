@@ -27,7 +27,13 @@ interface PaymentMethod {
 interface BuyCreditsModalProps {
   open: boolean;
   onClose: () => void;
-  onShowTransactions?: (data?: { credits: number; amount: number }) => void;
+  onShowTransactions?: (data?: {
+    credits: number;
+    amount: number;
+    onPaymentSuccess?: () => void;
+    checkoutUrl?: string;
+  }) => void;
+  onPaymentSuccess?: () => void;
 }
 
 const PAYMENT_METHODS: PaymentMethod[] = [
@@ -139,6 +145,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   open,
   onClose,
   onShowTransactions,
+  onPaymentSuccess,
 }) => {
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string>("card");
@@ -194,7 +201,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
     const amount = Number(customAmount || 0);
     const credits = Number(customCredits || 0);
     if (!amount || !credits) {
-      alert("Please enter valid amount and credits");
+      toast.error("Please enter valid amount and credits");
       return;
     }
 
@@ -213,7 +220,9 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         setSelectedPackage(Number(created.id));
       }
     } catch (err: any) {
-      alert((err as any)?.data?.message || "Failed to create custom package");
+      toast.error(
+        (err as any)?.data?.message || "Failed to create custom package",
+      );
     }
   }, [customAmount, customCredits, createCustomPackage]);
 
@@ -222,27 +231,9 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
       ? { packageId: 0, customAmount: Number(customAmount) || 0 }
       : { packageId: selectedPackage || 0, customAmount: 0 };
 
-    let creditsToPass = 0;
-    let amountToPass = 0;
-    if (showCustomAmount) {
-      creditsToPass = Number(customCredits) || 0;
-      amountToPass = Number(customAmount) || 0;
-    } else {
-      const raw =
-        packagesResponse && Array.isArray(packagesResponse.data)
-          ? packagesResponse.data
-          : [];
-      const found = raw.find((p: any) => Number(p.id) === selectedPackage);
-      if (found) {
-        creditsToPass = Number(found.credits ?? 0);
-        amountToPass = Number(found.amount ?? 0);
-      }
-    }
-
     try {
       const res = await buyCredits(payload).unwrap();
 
-      // If backend signals failure in a 200 response via ResponseBody.status
       if (res && (res as any).status === false) {
         const msg =
           (res as any).message ||
@@ -251,10 +242,31 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         return;
       }
 
-      onClose();
-      if (typeof onShowTransactions === "function") {
-        onShowTransactions({ credits: creditsToPass, amount: amountToPass });
+      // Get the checkout URL from the response
+      const redirectUrl =
+        (res as any)?.data?.checkoutUrl || (res as any)?.data?.redirectUrl;
+
+      if (redirectUrl) {
+        const urlStr = String(redirectUrl);
+
+        // Open checkout URL in new tab
+        try {
+          const newWin = window.open(urlStr, "_blank");
+          if (newWin) newWin.opener = null;
+        } catch {
+          try {
+            window.location.assign(urlStr);
+          } catch {
+            toast.error("Failed to open checkout page");
+          }
+        }
+
+        onClose(); // Close the modal after opening checkout
+        return;
       }
+
+      // If no checkout URL, show error
+      toast.error("No checkout URL received. Please try again.");
     } catch (err: any) {
       if (err?.status === 401) {
         toast.error("Session expired. Please login again.");
@@ -265,18 +277,8 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         toast.error(message);
       }
     }
-  }, [
-    showCustomAmount,
-    customAmount,
-    customCredits,
-    selectedPackage,
-    buyCredits,
-    onClose,
-    onShowTransactions,
-    packagesResponse,
-  ]);
+  }, [showCustomAmount, customAmount, selectedPackage, buyCredits, onClose]);
 
-  // ✅ Memoize credit packages mapping
   const creditPackages: CreditPackage[] = useMemo(() => {
     const _raw = packagesResponse?.data;
     const _rawPackages = Array.isArray(_raw) ? _raw : [];
@@ -336,7 +338,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         aria-hidden="true"
       />
 
-      {/* Desktop View - Original Design */}
+      {/* Desktop View */}
       <div
         className={`hidden sm:block fixed top-4 right-4 bottom-4 w-full sm:w-[640px] bg-white rounded-3xl shadow-2xl z-[70] transform transition-transform duration-300 ease-out overflow-hidden ${
           open ? "translate-x-0" : "translate-x-full"
@@ -559,14 +561,13 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         </div>
       </div>
 
-      {/* Mobile View - New Design */}
+      {/* Mobile View */}
       <div
         className={`sm:hidden fixed inset-0 bg-white z-[70] transform transition-transform duration-300 ease-out overflow-y-auto ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex flex-col min-h-full p-4">
-          {/* Header */}
           <div className="mb-6">
             <button
               onClick={onClose}
@@ -593,7 +594,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             </p>
           </div>
 
-          {/* Choose Credit Package */}
           <section className="flex flex-col gap-4 p-4 rounded-3xl border-2 border-gray-700 mb-4">
             <h2 className="[font-family:'Archivo',Helvetica] font-medium text-gray-500 text-base">
               Choose Credit Package
@@ -671,7 +671,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             </div>
           </section>
 
-          {/* Payment Method */}
           <section className="flex flex-col gap-4 p-4 rounded-3xl border-2 border-gray-700 mb-6">
             <h2 className="[font-family:'Archivo',Helvetica] font-medium text-gray-500 text-base">
               Payment Method
@@ -680,7 +679,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             <div className="flex flex-col gap-3">{paymentOptions}</div>
           </section>
 
-          {/* Buttons */}
           <div className="flex flex-col gap-3 mt-auto">
             <button
               onClick={handleBuyCredits}
