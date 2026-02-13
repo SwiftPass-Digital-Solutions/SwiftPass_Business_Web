@@ -34,7 +34,9 @@ export const Frame: React.FC<{
   }, [initialData]);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value } = e.target;
     if (name === "role") {
@@ -95,7 +97,9 @@ export const Frame: React.FC<{
 
         if (!res.ok) {
           const errBody = await res.json().catch(() => null);
-          throw new Error(errBody?.message || res.statusText || "Request failed");
+          throw new Error(
+            errBody?.message || res.statusText || "Request failed",
+          );
         }
 
         // notify parent to update UI if provided
@@ -148,12 +152,12 @@ export const Frame: React.FC<{
   // Invitation display is handled by parent via `onInviteSent`.
 
   return (
-    <div className="flex min-h-screen w-full items-start justify-center bg-white p-4 sm:p-8">
+    <div className="flex min-h-full w-full items-start justify-center bg-white p-4 sm:p-8">
       <div className="w-full max-w-[512px]">
         {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4">
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
             onClick={() => (onClose ? onClose() : window.history.back())}
             type="button"
           >
@@ -255,8 +259,12 @@ export const Frame: React.FC<{
               >
                 <option value="">Select role</option>
                 <option value={BusinessRoleEnum.Admin}>Admin</option>
-                <option value={BusinessRoleEnum.ComplianceOfficer}>Compliance Officer</option>
-                <option value={BusinessRoleEnum.FinanceManager}>Finance Manager</option>
+                <option value={BusinessRoleEnum.ComplianceOfficer}>
+                  Compliance Officer
+                </option>
+                <option value={BusinessRoleEnum.FinanceManager}>
+                  Finance Manager
+                </option>
               </select>
               <div className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2">
                 <svg
@@ -277,12 +285,10 @@ export const Frame: React.FC<{
               </div>
             </div>
           </div>
-
-
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex gap-4">
+        {/* Action Buttons: stacked on mobile, row on desktop */}
+        <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:gap-4">
           <button
             onClick={handleCancel}
             className="flex-1 rounded-lg border border-gray-200 bg-white px-6 py-3 font-['Archivo'] text-base font-medium text-gray-900 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
@@ -290,6 +296,7 @@ export const Frame: React.FC<{
           >
             Cancel
           </button>
+
           <button
             onClick={handleSendInvite}
             disabled={!isFormValid() || isSubmitting}

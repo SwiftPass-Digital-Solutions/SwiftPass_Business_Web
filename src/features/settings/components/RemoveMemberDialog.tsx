@@ -19,7 +19,7 @@ export const RemoveMemberDialog = ({
       role="presentation"
     >
       <div
-        className="inline-flex flex-col items-center gap-6 p-8 relative bg-white"
+        className="inline-flex flex-col items-center gap-6 p-4 sm:p-8 relative bg-white w-full sm:w-auto rounded-3xl shadow-lg"
         data-model-id="134:478"
         role="dialog"
         aria-labelledby="dialog-title"
@@ -34,7 +34,7 @@ export const RemoveMemberDialog = ({
           </div>
         </div>
 
-        <div className="flex-col w-[411px] items-center gap-1 flex-[0_0_auto] flex relative">
+        <div className="flex-col w-full sm:w-[280px] items-center gap-1 flex-[0_0_auto] flex relative">
           <h2
             id="dialog-title"
             className="relative self-stretch mt-[-1.00px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-dark-dark-1000 text-lg text-center tracking-[-0.54px] leading-[26.1px]"
@@ -50,9 +50,9 @@ export const RemoveMemberDialog = ({
           </p>
         </div>
 
-        <div className="w-[411px] items-start gap-3 flex-[0_0_auto] flex relative">
+        <div className="flex flex-col-reverse w-full gap-3 sm:flex-row sm:w-[411px] sm:items-start sm:flex-[0_0_auto] relative">
           <button
-            className="all-[unset] box-border flex items-center justify-center gap-2.5 p-4 relative flex-1 grow bg-primitives-neutral-neutral-500 rounded-xl border border-solid border-primitives-neutral-neutral-600 shadow-[0px_4px_0px_#dcdcdc] cursor-pointer hover:opacity-90 active:shadow-none active:translate-y-1 transition-all"
+            className="all-[unset] box-border flex items-center justify-center gap-2.5 p-4 relative flex-1 grow bg-primitives-neutral-neutral-500 rounded-xl border border-solid border-primitives-neutral-neutral-600 shadow-[0px_4px_0px_#dcdcdc] cursor-pointer hover:opacity-90 active:shadow-[0px_2px_0px_#dcdcdc] active:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={onCancel}
             type="button"
             aria-label="Cancel user removal"
@@ -63,7 +63,7 @@ export const RemoveMemberDialog = ({
           </button>
 
           <button
-            className="all-[unset] box-border items-center justify-center gap-2.5 p-4 flex-1 grow bg-[#CC0E0E] rounded-xl border border-solid border-primitives-red-red-400 shadow-[0px_4px_0px_#ff1212] flex relative cursor-pointer hover:opacity-90 active:shadow-none active:translate-y-1 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="all-[unset] box-border items-center justify-center gap-2.5 p-4 flex-1 grow bg-[#CC0E0E] rounded-xl border border-solid border-primitives-red-red-400 shadow-[0px_4px_0px_#ff1212] flex relative cursor-pointer hover:opacity-90 active:shadow-[0px_2px_0px_#ff1212] active:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={onConfirm}
             type="button"
             disabled={isRemoving || internalRemoving}

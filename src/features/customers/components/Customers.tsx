@@ -53,7 +53,7 @@ const Customers = () => {
 
   const selectedCustomerDetails = useMemo(
     () => customerDetails?.data || null,
-    [customerDetails]
+    [customerDetails],
   );
 
   const users = useMemo(
@@ -61,7 +61,7 @@ const Customers = () => {
       users: customerData?.data?.data || [],
       pagination: customerData?.data || null,
     }),
-    [customerData]
+    [customerData],
   );
 
   const documents = (selectedCustomerDetails?.documents ?? {}) as Record<
@@ -77,7 +77,7 @@ const Customers = () => {
       });
       return acc;
     },
-    []
+    [],
   );
 
   return (

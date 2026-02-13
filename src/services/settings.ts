@@ -1,5 +1,6 @@
 import { endpoints } from "@/constants";
 import { getAuthHeaders } from "@/utils/api";
+import { handleLogoutRedirect } from "@/utils";
 import { BusinessRoleEnum } from "@/constants/enums";
 
 export interface TeamMemberApi {
@@ -34,6 +35,11 @@ export const getTeamMembers = async (): Promise<TeamMember[]> => {
     credentials,
   });
 
+  if (res.status === 401) {
+    if (typeof window !== "undefined") handleLogoutRedirect();
+    throw new Error("Unauthorized");
+  }
+
   if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
 
   const json = await res.json();
@@ -65,6 +71,11 @@ export const deleteTeamMember = async (memberId: number | string): Promise<void>
     headers,
     credentials,
   });
+
+  if (res.status === 401) {
+    if (typeof window !== "undefined") handleLogoutRedirect();
+    throw new Error("Unauthorized");
+  }
 
   if (!res.ok) {
     let errMsg = `Request failed (${res.status})`;
