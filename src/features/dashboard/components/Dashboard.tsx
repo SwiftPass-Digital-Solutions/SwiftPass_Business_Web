@@ -39,12 +39,12 @@ const Dashboard = () => {
       users: customerData?.data?.data?.slice(0, 3) || [],
       pagination: customerData?.data || null,
     }),
-    [customerData]
+    [customerData],
   );
 
   const analytics = useMemo(
     () => dashboardAnalytics?.data || null,
-    [dashboardAnalytics]
+    [dashboardAnalytics],
   );
 
   const statsData = [
@@ -79,7 +79,7 @@ const Dashboard = () => {
 
         return acc;
       },
-      []
+      [],
     );
   }, [dashboardData?.uploadedDocuments]);
 

@@ -41,6 +41,42 @@ const formatCell = (row: HistoryItem, key: string) => {
   return row[key as keyof HistoryItem] ?? "";
 };
 
+// Mobile Transaction Card Component
+const TransactionCard = React.memo(({ row }: { row: HistoryItem }) => {
+  const date = new Date(row.createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  return (
+    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+      <div className="text-sm font-medium text-gray-900 mb-3 [font-family:'Archivo',Helvetica]">
+        {date}
+      </div>
+      
+      <div className="flex flex-col gap-2">
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600 [font-family:'Archivo',Helvetica]">Action</span>
+          <span className="text-sm text-gray-900 [font-family:'Archivo',Helvetica]">{row.transactionType}</span>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600 [font-family:'Archivo',Helvetica]">Credits</span>
+          <span className="text-sm text-gray-900 [font-family:'Archivo',Helvetica]">+{row.credits}</span>
+        </div>
+        
+        <div className="flex justify-between items-center">
+          <span className="text-sm text-gray-600 [font-family:'Archivo',Helvetica]">Balance</span>
+          <span className="text-sm text-gray-900 [font-family:'Archivo',Helvetica]">{row.balanceAfter?.toLocaleString?.() ?? row.balanceAfter}</span>
+        </div>
+      </div>
+    </div>
+  );
+});
+
+TransactionCard.displayName = "TransactionCard";
+
 // Pagination component with proper typing
 interface PaginationProps {
   page: number;
@@ -211,6 +247,13 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, onOpenBuyCredits, histor
     ));
   }, [paged, columns]);
 
+  // Memoize mobile cards
+  const mobileCards = useMemo(() => {
+    return paged.map((row, index) => (
+      <TransactionCard key={row.id || index} row={row} />
+    ));
+  }, [paged]);
+
   if (!open) return null;
 
   const sidebarOffset = `${sideBarWidth}px`;
@@ -240,10 +283,11 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, onOpenBuyCredits, histor
         `}
       </style>
       <div 
-        className="w-full h-full bg-white overflow-y-auto" 
+        className="w-full h-full bg-white lg:bg-white overflow-y-auto" 
         style={{ ...wrapperStyle, animation: 'slideIn 0.3s ease-out' }}
       >
-        <div className="sticky top-0 bg-white border-b border-gray-200 z-10 shadow-sm">
+        {/* Desktop Header */}
+        <div className="hidden lg:block sticky top-0 bg-white border-b border-gray-200 z-10 shadow-sm">
           <div className="max-w-7xl mx-auto px-6 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -273,7 +317,34 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, onOpenBuyCredits, histor
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        {/* Mobile Header */}
+        <div className="lg:hidden sticky top-0 bg-white z-10 px-4 py-4">
+          <div className="flex items-center gap-3 mb-2">
+            <button
+              onClick={onClose}
+              className="w-10 h-10 flex items-center justify-center rounded-lg bg-white hover:bg-gray-50 active:scale-95 transition-all"
+              aria-label="Go back"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          </div>
+          
+          <p className="text-sm text-gray-400 [font-family:'Archivo',Helvetica] mb-4 px-1">
+            View your full billing history
+          </p>
+
+          <button 
+            onClick={handleBuyCreditsClick}
+            className="w-full flex items-center justify-center gap-2.5 px-6 py-3.5 bg-blue-600 rounded-xl hover:bg-blue-700 active:scale-95 transition-all"
+          >
+            <span className="font-medium text-white text-base [font-family:'Archivo',Helvetica]">Buy more credits</span>
+          </button>
+        </div>
+
+        {/* Desktop Content */}
+        <div className="hidden lg:block max-w-7xl mx-auto px-6 py-8">
           <div className="w-full overflow-x-auto bg-white rounded-2xl sm:rounded-[28px] border border-solid border-[#efefef] shadow-sm">
             <table className="w-full">
               <thead>
@@ -302,6 +373,22 @@ const HistoryModal: React.FC<Props> = ({ open, onClose, onOpenBuyCredits, histor
               </tbody>
             </table>
           </div>
+
+          {paged.length > 0 && <PaginationMemo page={page} totalPages={totalPages} onChange={goToPage} />}
+        </div>
+
+        {/* Mobile Content */}
+        <div className="lg:hidden px-4 py-4 min-h-screen">
+          {paged.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-16">
+              <img className="w-20 h-20" alt="Receipt icon indicating no billing history" src="https://c.animaapp.com/0yfnJNzQ/img/fluent-color-receipt-32.svg" loading="lazy" />
+              <p className="[font-family:'Archivo',Helvetica] font-medium text-white text-base tracking-[-0.54px]">No billing history</p>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {mobileCards}
+            </div>
+          )}
 
           {paged.length > 0 && <PaginationMemo page={page} totalPages={totalPages} onChange={goToPage} />}
         </div>
