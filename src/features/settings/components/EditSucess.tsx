@@ -22,7 +22,7 @@ export const InvitationSent = ({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">
       <section
-        className="inline-flex flex-col items-center gap-6 p-8 relative bg-white rounded-lg shadow-lg"
+        className="inline-flex flex-col items-center gap-6 p-4 sm:p-8 relative bg-white w-full sm:w-auto rounded-3xl shadow-lg"
         role="dialog"
         aria-labelledby="invitation-title"
         aria-describedby="invitation-description"
@@ -37,7 +37,7 @@ export const InvitationSent = ({
           </div>
         </header>
 
-        <div className="flex-col w-[411px] items-center gap-1 flex-[0_0_auto] flex relative">
+        <div className="flex-col w-full sm:w-[280px] items-center gap-1 flex-[0_0_auto] flex relative">
           <h1
             id="invitation-title"
             className="relative self-stretch mt-[-1.00px] [font-family:'Archivo',Helvetica] font-medium text-primitives-neutral-dark-dark-1000 text-lg text-center tracking-[-0.54px] leading-[26.1px]"
@@ -53,9 +53,9 @@ export const InvitationSent = ({
           </p>
         </div>
 
-        <footer className="w-[411px] items-start gap-3 flex-[0_0_auto] flex relative">
+        <footer className="flex flex-col-reverse w-full gap-3 sm:flex-row sm:w-[411px] sm:items-start sm:flex-[0_0_auto] relative">
           <button
-            className="all-[unset] box-border flex items-center justify-center gap-2.5 p-4 relative flex-1 grow bg-primitives-neutral-neutral-500 rounded-xl border border-solid border-primitives-neutral-neutral-600 shadow-[0px_4px_0px_#dcdcdc]"
+            className="all-[unset] box-border flex items-center justify-center gap-2.5 p-4 relative flex-1 grow bg-primitives-neutral-neutral-500 rounded-xl border border-solid border-primitives-neutral-neutral-600 shadow-[0px_4px_0px_#dcdcdc] cursor-pointer hover:opacity-90 active:shadow-[0px_2px_0px_#dcdcdc] active:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleCancel}
             disabled={isProcessing}
             type="button"
@@ -67,7 +67,7 @@ export const InvitationSent = ({
           </button>
 
           <button
-            className="items-center justify-center gap-2.5 p-4 flex-1 grow bg-[#0C39ED] rounded-xl border border-solid border-primitives-primary-blue-300 shadow-[0px_4px_0px_#3d61f1] flex relative"
+            className="all-[unset] box-border items-center justify-center gap-2.5 p-4 flex-1 grow bg-[#0C39ED] rounded-xl border border-solid border-primitives-primary-blue-300 shadow-[0px_4px_0px_#3d61f1] flex relative cursor-pointer hover:opacity-90 active:shadow-[0px_2px_0px_#3d61f1] active:translate-y-[2px] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={handleGoHome}
             disabled={isProcessing}
             type="button"

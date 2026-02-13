@@ -20,7 +20,9 @@ const useCreditsAnalytics = () => {
   const { loggedIn } = useAppSelector((state) => state.auth);
 
   const { data, isLoading, error } = useCreditsAnalyticsQuery(undefined, {
+    // avoid refetching on every mount (prevents blocking UI when component remounts)
     refetchOnMountOrArgChange: true,
+    // keep skipping when user is not logged in
     skip: !loggedIn,
   });
 

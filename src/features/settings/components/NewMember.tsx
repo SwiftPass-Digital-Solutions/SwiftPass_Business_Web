@@ -2,7 +2,10 @@ import React, { useState } from "react";
 import { endpoints } from "@/constants";
 import { getAuthHeaders } from "@/utils/api";
 
-export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: string) => void; }> = ({ onClose, onInviteSent }) => {
+export const Frame: React.FC<{
+  onClose?: () => void;
+  onInviteSent?: (email: string) => void;
+}> = ({ onClose, onInviteSent }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     workEmail: "",
@@ -13,7 +16,9 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+    >,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -59,7 +64,6 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
         throw new Error(errBody?.message || res.statusText || "Request failed");
       }
 
-      // success — notify parent to show invitation popup and close this frame
       if (onInviteSent) onInviteSent(payload.email);
       if (onClose) onClose();
     } catch (err: any) {
@@ -79,15 +83,13 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
     );
   };
 
-  // Invitation display is handled by parent via `onInviteSent`.
-
   return (
     <div className="flex min-h-screen w-full items-start justify-center bg-white p-4 sm:p-8">
       <div className="w-full max-w-[512px]">
         {/* Header */}
-        <div className="mb-8 flex items-center gap-4">
+        <div className="mb-6 sm:mb-8 flex items-center gap-3 sm:gap-4">
           <button
-            className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
             onClick={() => (onClose ? onClose() : window.history.back())}
             type="button"
           >
@@ -107,15 +109,15 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
               />
             </svg>
           </button>
-          <h1 className="font-['Archivo'] text-2xl font-medium text-gray-900">
+          <h1 className="font-['Archivo'] text-xl sm:text-2xl font-medium text-gray-900">
             Add New Team Member
           </h1>
         </div>
 
         {/* Form */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5 sm:gap-6">
           {/* Full Name */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
             <label
               htmlFor="fullName"
               className="font-['Archivo'] text-sm font-medium text-gray-900"
@@ -134,7 +136,7 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
           </div>
 
           {/* Work Email */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
             <label
               htmlFor="workEmail"
               className="font-['Archivo'] text-sm font-medium text-gray-900"
@@ -153,7 +155,7 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
           </div>
 
           {/* Phone Number */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
             <label
               htmlFor="phoneNumber"
               className="font-['Archivo'] text-sm font-medium text-gray-900"
@@ -172,7 +174,7 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
           </div>
 
           {/* Role */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
             <label
               htmlFor="role"
               className="font-['Archivo'] text-sm font-medium text-gray-900"
@@ -213,7 +215,7 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
           </div>
 
           {/* Note for user */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5 sm:gap-2">
             <label
               htmlFor="note"
               className="font-['Archivo'] text-sm font-medium text-gray-900"
@@ -232,8 +234,11 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-8 flex gap-4">
+        {/* Action Buttons
+            Mobile:  stacked — Send invite on top, Cancel below  (flex-col-reverse reverses DOM order)
+            Desktop: side-by-side — Cancel on left, Send invite on right  (sm:flex-row)
+        */}
+        <div className="mt-6 sm:mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:gap-4">
           <button
             onClick={handleCancel}
             className="flex-1 rounded-lg border border-gray-200 bg-white px-6 py-3 font-['Archivo'] text-base font-medium text-gray-900 transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-200"
@@ -254,7 +259,6 @@ export const Frame: React.FC<{ onClose?: () => void; onInviteSent?: (email: stri
             {isSubmitting ? "Sending..." : "Send invite"}
           </button>
         </div>
-        {/* InvitationSent is shown by parent */}
       </div>
     </div>
   );
