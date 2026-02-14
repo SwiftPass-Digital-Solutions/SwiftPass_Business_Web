@@ -100,7 +100,7 @@ const Transactions: React.FC<TransactionsProps> = ({
   history,
   selectedCredits,
   selectedAmount,
-  checkoutUrl,
+
   onPaymentSuccess,
   onProceed,
 }) => {
@@ -160,13 +160,13 @@ const Transactions: React.FC<TransactionsProps> = ({
     onClose();
   }, [onPaymentSuccess, onClose]);
 
-  const email =
-    fetchedEmail ?? tx?.customerEmail ?? tx?.email ?? "customer@example.com";
-  const amountNaira =
-    typeof selectedAmount !== "undefined" && selectedAmount !== null
-      ? selectedAmount
-      : (tx?.amount ?? tx?.total ?? 0);
-  const amountKobo = Math.round(Number(amountNaira) * 100);
+  // const email =
+  //   fetchedEmail ?? tx?.customerEmail ?? tx?.email ?? "customer@example.com";
+  // const amountNaira =
+  //   typeof selectedAmount !== "undefined" && selectedAmount !== null
+  //     ? selectedAmount
+  //     : (tx?.amount ?? tx?.total ?? 0);
+  // const amountKobo = Math.round(Number(amountNaira) * 100);
 
   if (!open) return null;
 

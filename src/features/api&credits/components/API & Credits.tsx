@@ -384,14 +384,14 @@ const Api_credits = () => {
     [analytics?.creditsConsumed, analytics?.creditsPurchased],
   );
 
-  const chartMax = useMemo(
-    () =>
-      Math.max(
-        analytics?.creditsPurchased || 0,
-        analytics?.creditsConsumed || 0,
-      ) || 10,
-    [analytics?.creditsConsumed, analytics?.creditsPurchased],
-  );
+  // const chartMax = useMemo(
+  //   () =>
+  //     Math.max(
+  //       analytics?.creditsPurchased || 0,
+  //       analytics?.creditsConsumed || 0,
+  //     ) || 10,
+  //   [analytics?.creditsConsumed, analytics?.creditsPurchased],
+  // );
 
   // Dashboard status (approval counts)
   const { dashboardData } = useDashboardStatus();
