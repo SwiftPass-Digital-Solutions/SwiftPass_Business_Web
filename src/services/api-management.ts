@@ -58,6 +58,8 @@ export const apiManagementService = apiSlice.injectEndpoints({
       transformResponse: (
         response: ResponseBody<ApiManagementCustomersResponse>
       ) => response,
+      // ✅ Add keepUnusedDataFor to cache data for 5 minutes
+      keepUnusedDataFor: 300,
     }),
 
     customersDetails: builder.query({
@@ -69,6 +71,8 @@ export const apiManagementService = apiSlice.injectEndpoints({
       transformResponse: (
         response: ResponseBody<ApiManagementCustomersDetailsResponse>
       ) => response,
+      // ✅ Cache for 5 minutes
+      keepUnusedDataFor: 300,
     }),
 
     revokeApiKey: builder.mutation({
@@ -77,7 +81,8 @@ export const apiManagementService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body: body,
       }),
-      invalidatesTags: [],
+      // ✅ Invalidate relevant tags after revoking
+      invalidatesTags: ["Credits"],
       transformResponse: (response: GenerateApiKeyResponse) => response,
     }),
 
@@ -87,7 +92,8 @@ export const apiManagementService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body: body,
       }),
-      invalidatesTags: [],
+      // ✅ Invalidate relevant tags after generating
+      invalidatesTags: ["Credits"],
       transformResponse: (response: GenerateApiKeyResponse) => response,
     }),
 
@@ -97,7 +103,8 @@ export const apiManagementService = apiSlice.injectEndpoints({
         method: REQUEST_METHODS.POST,
         body: body,
       }),
-      invalidatesTags: [],
+      // ✅ Invalidate relevant tags after regenerating
+      invalidatesTags: ["Credits"],
       transformResponse: (response: GenerateApiKeyResponse) => response,
     }),
   }),
