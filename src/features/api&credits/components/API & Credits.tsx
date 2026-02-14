@@ -1,4 +1,11 @@
-import React, { useState, useCallback, useMemo, lazy, Suspense } from "react";
+import React, {
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  lazy,
+  Suspense,
+} from "react";
 
 // ─── Lazy-load heavy modals so they don't block initial navigation ───────────
 const HistoryModal = lazy(() => import("./HistoryModal"));
@@ -66,7 +73,6 @@ const BillingCard = React.memo(({ row }: { row: BillingHistoryItem }) => (
 BillingCard.displayName = "BillingCard";
 
 // Memoize the chart component to prevent re-renders
-const MemoizedCreditsBarChart = React.memo(CreditsBarChart);
 
 const Api_credits = () => {
   // Fetch credits analytics via shared hook (DRY, uses configured endpoints)
@@ -157,6 +163,9 @@ const Api_credits = () => {
     { key: string; type: string; revoked?: boolean }[]
   >([]);
 
+  // Track when chart has finished rendering
+  const [chartRendered, setChartRendered] = useState(false);
+
   // Full history modal state
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const openHistoryModal = useCallback(() => setShowHistoryModal(true), []);
@@ -169,6 +178,10 @@ const Api_credits = () => {
     number | string | null
   >(null);
   const [txSelectedAmount, setTxSelectedAmount] = useState<number | null>(null);
+  // Stores the payment callback passed from BuyCreditsModal → Transactions
+  const [txOnProceed, setTxOnProceed] = useState<
+    (() => Promise<boolean>) | null
+  >(null);
 
   const openBuyCreditsModal = useCallback(() => {
     setShowBuyCreditsModal(true);
@@ -180,10 +193,15 @@ const Api_credits = () => {
 
   const closeTransactions = useCallback(() => {
     setShowTransactions(false);
+    setTxOnProceed(null);
   }, []);
 
   const openTransactions = useCallback(
-    (data?: { credits?: number; amount?: number }) => {
+    (data?: {
+      credits?: number;
+      amount?: number;
+      onProceed?: () => Promise<boolean>;
+    }) => {
       if (data) {
         setTxSelectedCredits(
           typeof data.credits !== "undefined" ? data.credits : null,
@@ -191,9 +209,12 @@ const Api_credits = () => {
         setTxSelectedAmount(
           typeof data.amount !== "undefined" ? data.amount : null,
         );
+        // Wrap in updater form: () => fn so React stores fn, not calls it as updater
+        setTxOnProceed(() => data.onProceed ?? null);
       } else {
         setTxSelectedCredits(null);
         setTxSelectedAmount(null);
+        setTxOnProceed(null);
       }
       setShowTransactions(true);
     },
@@ -382,281 +403,323 @@ const Api_credits = () => {
     [analytics?.recentCreditHistory],
   );
 
+  // Wait for chart to finish rendering before hiding loader
+  useEffect(() => {
+    if (!analyticsLoading && chartData && chartData.length > 0) {
+      // Use setTimeout with longer delay to ensure chart fully renders
+      const timer = setTimeout(() => {
+        setChartRendered(true);
+      }, 1000); // 1 second - ensures Recharts fully renders and paints
+
+      return () => clearTimeout(timer);
+    } else {
+      // Reset when loading starts
+      setChartRendered(false);
+    }
+  }, [analyticsLoading, chartData]);
+
+  // Show loader until both data is loaded AND chart is rendered
+  const isLoading = analyticsLoading || !chartRendered;
+
   return (
     <>
-      {analyticsLoading && <PageLoader />}
+      {isLoading && <PageLoader />}
+
       <div className="w-full max-w-full overflow-x-hidden px-4 sm:px-0">
-        {/* GenerateModal: only mount (and lazy-load) when opened */}
-        {showGenerateModal && (
-          <Suspense fallback={null}>
-            <GenerateModal
-              showGenerateModal={showGenerateModal}
-              modalStep={modalStep}
-              modalMode={modalMode}
-              selectedEnvs={selectedEnvs}
-              lastGeneratedKeys={lastGeneratedKeys}
-              lastRevokedEnvs={lastRevokedEnvs}
-              isGenerating={isGenerating}
-              isRegenerating={isRegenerating}
-              isRevoking={isRevoking}
-              onClose={closeGenerateModal}
-              onToggleEnv={toggleEnv}
-              onNext={handleModalNext}
-              onGenerateKey={handleModalGenerateKey}
-              onRevokeKey={handleModalRevokeKey}
-              onCopyKey={handleCopyKey}
-              onModalClose={handleModalClose}
-            />
-          </Suspense>
-        )}
+        {/* Only render content when data is ready AND chart is rendered */}
+        {!isLoading && (
+          <>
+            {/* GenerateModal: only mount (and lazy-load) when opened */}
+            {showGenerateModal && (
+              <Suspense fallback={null}>
+                <GenerateModal
+                  showGenerateModal={showGenerateModal}
+                  modalStep={modalStep}
+                  modalMode={modalMode}
+                  selectedEnvs={selectedEnvs}
+                  lastGeneratedKeys={lastGeneratedKeys}
+                  lastRevokedEnvs={lastRevokedEnvs}
+                  isGenerating={isGenerating}
+                  isRegenerating={isRegenerating}
+                  isRevoking={isRevoking}
+                  onClose={closeGenerateModal}
+                  onToggleEnv={toggleEnv}
+                  onNext={handleModalNext}
+                  onGenerateKey={handleModalGenerateKey}
+                  onRevokeKey={handleModalRevokeKey}
+                  onCopyKey={handleCopyKey}
+                  onModalClose={handleModalClose}
+                />
+              </Suspense>
+            )}
 
-        <main className="flex flex-col items-start gap-[22px] relative w-full overflow-x-hidden">
-          <section className="flex flex-col items-start gap-5 relative self-stretch w-full">
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 w-full">
-              {statCards.map((card, index) => (
-                <StatCard key={index} card={card} />
-              ))}
-            </div>
-
-            {/* API Keys area */}
-            <section className="flex flex-col gap-5 p-4 sm:p-6 w-full bg-white rounded-[18px] sm:rounded-[28px] border border-solid border-[#efefef]">
-              <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                  <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-lg sm:text-xl tracking-[-0.60px] leading-[normal]">
-                    API Keys &amp; Access
-                  </h1>
-
-                  {approvedDocumentsCount === 4 && (
-                    <div
-                      className="inline-flex justify-center gap-1.5 px-2 py-1 bg-[#effff2] rounded-[999px] items-center"
-                      role="status"
-                      aria-label="Verification status"
-                    >
-                      <div
-                        className="w-1.5 h-1.5 bg-[#00a821] rounded-[3px]"
-                        aria-hidden="true"
-                      />
-                      <div className="[font-family:'Archivo',Helvetica] font-normal text-[#00a821] text-sm tracking-[-0.42px] leading-[normal] whitespace-nowrap">
-                        Verified
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex flex-row gap-2 items-center w-full sm:w-auto">
-                  <button
-                    className={`inline-flex flex-1 sm:flex-initial sm:w-auto justify-center gap-2.5 px-3 py-2.5 sm:p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
-                      approvedDocumentsCount !== 4
-                        ? "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed"
-                        : "bg-[#f0f0f0] border-[#dcdcdc] cursor-pointer hover:bg-[#f5f5f5] active:shadow-none active:translate-y-[2px]"
-                    }`}
-                    onClick={openRevokeModal}
-                    disabled={approvedDocumentsCount !== 4}
-                    aria-label="Revoke API key"
-                    type="button"
-                  >
-                    <span className="[font-family:'Archivo',Helvetica] font-medium text-xs sm:text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
-                      Revoke key
-                    </span>
-                  </button>
-
-                  <button
-                    className={`inline-flex flex-1 sm:flex-initial sm:w-auto justify-center gap-2.5 px-3 py-2.5 sm:p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
-                      approvedDocumentsCount !== 4
-                        ? "bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed"
-                        : "bg-[#0a51db] border-[#0844c4] cursor-pointer hover:bg-[#0a3fc9] active:shadow-none active:translate-y-[2px]"
-                    }`}
-                    onClick={openGenerateModal}
-                    disabled={approvedDocumentsCount !== 4}
-                    aria-label={
-                      apiKeys.length > 0
-                        ? "Regenerate API key"
-                        : "Generate new API key"
-                    }
-                    type="button"
-                  >
-                    <span
-                      className={`[font-family:'Archivo',Helvetica] font-medium text-xs sm:text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap ${
-                        approvedDocumentsCount !== 4
-                          ? "text-gray-500"
-                          : "text-white"
-                      }`}
-                    >
-                      {approvedDocumentsCount !== 4
-                        ? "Generate new key"
-                        : apiKeys.length > 0
-                          ? "Regenerate new key"
-                          : "Generate new key"}
-                    </span>
-                  </button>
-                </div>
-              </header>
-
-              {approvedDocumentsCount !== 4 ? (
-                <div className="border-2 border-blue-500 rounded-lg bg-blue-50/30 p-8 sm:p-12">
-                  <div className="flex flex-col items-center justify-center text-center">
-                    {/* Blurred API Key */}
-                    <div className="mb-4 sm:mb-6">
-                      <div className="text-xl sm:text-2xl font-mono text-gray-300 blur-[6px] select-none mb-1">
-                        sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxx
-                      </div>
-                    </div>
-
-                    {/* Hourglass Emoji */}
-                    <div className="mb-4 sm:mb-6 text-2xl sm:text-3xl">⌛️</div>
-
-                    {/* Message Text */}
-                    <p className="text-base sm:text-lg text-gray-700 font-normal">
-                      These will be generated as soon as you're approved!
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-5 w-full">
-                  {apiKeys.length === 0 ? (
-                    <div className="flex items-center justify-center py-8 text-gray-400">
-                      <p className="text-sm">No API keys generated yet</p>
-                    </div>
-                  ) : (
-                    apiKeys.map((keyObj, index) => (
-                      <ApiKeyCard
-                        key={index}
-                        keyObj={keyObj}
-                        index={index}
-                        onCopy={handleCopyKey}
-                      />
-                    ))
-                  )}
-                </div>
-              )}
-            </section>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5 w-full">
-              <section className="flex flex-col gap-5 p-4 bg-white rounded-[28px] border border-[#efefef]">
-                <h2 className="text-lg sm:text-xl font-medium">
-                  Calls Overview
-                </h2>
-                <div className="grid grid-cols-2 gap-3 w-full">
-                  {overviewCards.map((card, index) => (
-                    <OverviewCard key={index} card={card} />
+            <main className="flex flex-col items-start gap-[22px] relative w-full overflow-x-hidden">
+              <section className="flex flex-col items-start gap-5 relative self-stretch w-full">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 w-full">
+                  {statCards.map((card, index) => (
+                    <StatCard key={index} card={card} />
                   ))}
                 </div>
-              </section>
 
-              <section className="flex flex-col gap-5 p-4 bg-white rounded-[28px] border border-[#efefef]">
-                <h2 className="text-lg sm:text-xl font-medium">
-                  Credits purchased vs. consumed
-                </h2>
-                <MemoizedCreditsBarChart max={chartMax} data={chartData} />
-              </section>
-            </div>
-          </section>
+                {/* API Keys area */}
+                <section className="flex flex-col gap-5 p-4 sm:p-6 w-full bg-white rounded-[18px] sm:rounded-[28px] border border-solid border-[#efefef]">
+                  <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full">
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-lg sm:text-xl tracking-[-0.60px] leading-[normal]">
+                        API Keys &amp; Access
+                      </h1>
 
-          {/* HistoryModal: only mount (and lazy-load) when opened */}
-          {showHistoryModal && (
-            <Suspense fallback={null}>
-              <HistoryModal
-                open={showHistoryModal}
-                onClose={closeHistoryModal}
-                onOpenBuyCredits={openBuyCreditsModal}
-                history={creditHistory}
-                columns={COLUMNS}
-                pageSize={12}
-              />
-            </Suspense>
-          )}
-
-          {/* BuyCreditsModal: only mount (and lazy-load) when opened */}
-          {showBuyCreditsModal && (
-            <Suspense fallback={null}>
-              <BuyCreditsModal
-                open={showBuyCreditsModal}
-                onClose={closeBuyCreditsModal}
-                onShowTransactions={openTransactions}
-              />
-            </Suspense>
-          )}
-
-          {/* Transactions: only mount (and lazy-load) when opened */}
-          {showTransactions && (
-            <Suspense fallback={null}>
-              <Transactions
-                open={showTransactions}
-                onClose={closeTransactions}
-                history={creditHistory}
-                selectedCredits={txSelectedCredits ?? undefined}
-                selectedAmount={txSelectedAmount ?? undefined}
-              />
-            </Suspense>
-          )}
-
-          <section className="flex flex-col gap-5 p-4 sm:p-6 w-full bg-white rounded-[28px] sm:rounded-[36px] border border-[#efefef]">
-            <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3">
-              <h2 className="text-lg sm:text-xl font-medium">
-                Billing & History Table
-              </h2>
-              <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
-                <button
-                  onClick={openHistoryModal}
-                  className="flex-1 sm:flex-initial sm:w-auto px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-200 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap"
-                >
-                  View more
-                </button>
-                <button
-                  onClick={openBuyCreditsModal}
-                  className="flex-1 sm:flex-initial sm:w-auto px-3 py-2.5 sm:px-4 sm:py-3 bg-blue-600 text-white rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap"
-                >
-                  Buy more credits
-                </button>
-              </div>
-            </header>
-
-            {tableData.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-4 py-16 w-full bg-white rounded-xl border border-[#f7f7f7]">
-                <img
-                  className="w-24 h-24"
-                  alt="No billing history"
-                  src="https://c.animaapp.com/0yfnJNzQ/img/fluent-color-receipt-32.svg"
-                />
-                <p className="text-lg font-medium">No billing history</p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop Table View */}
-                <div className="hidden sm:flex w-full overflow-x-auto">
-                  <div className="flex bg-white rounded-xl border border-[#f7f7f7] w-full">
-                    {COLUMNS.map((column) => (
-                      <div key={column.key} className="flex flex-col flex-1">
-                        <div className="flex h-[55px] items-center gap-2.5 p-4 bg-[#fbfbfb]">
-                          <div className="text-xs sm:text-sm text-gray-600">
-                            {column.label}
+                      {approvedDocumentsCount === 4 && (
+                        <div
+                          className="inline-flex justify-center gap-1.5 px-2 py-1 bg-[#effff2] rounded-[999px] items-center"
+                          role="status"
+                          aria-label="Verification status"
+                        >
+                          <div
+                            className="w-1.5 h-1.5 bg-[#00a821] rounded-[3px]"
+                            aria-hidden="true"
+                          />
+                          <div className="[font-family:'Archivo',Helvetica] font-normal text-[#00a821] text-sm tracking-[-0.42px] leading-[normal] whitespace-nowrap">
+                            Verified
                           </div>
                         </div>
-                        {tableData.map((row, index) => (
-                          <div
+                      )}
+                    </div>
+
+                    <div className="flex flex-row gap-2 items-center w-full sm:w-auto">
+                      <button
+                        className={`inline-flex flex-1 sm:flex-initial sm:w-auto justify-center gap-2.5 px-3 py-2.5 sm:p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
+                          approvedDocumentsCount !== 4
+                            ? "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed"
+                            : "bg-[#f0f0f0] border-[#dcdcdc] cursor-pointer hover:bg-[#f5f5f5] active:shadow-none active:translate-y-[2px]"
+                        }`}
+                        onClick={openRevokeModal}
+                        disabled={approvedDocumentsCount !== 4}
+                        aria-label="Revoke API key"
+                        type="button"
+                      >
+                        <span className="[font-family:'Archivo',Helvetica] font-medium text-xs sm:text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
+                          Revoke key
+                        </span>
+                      </button>
+
+                      <button
+                        className={`inline-flex flex-1 sm:flex-initial sm:w-auto justify-center gap-2.5 px-3 py-2.5 sm:p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
+                          approvedDocumentsCount !== 4
+                            ? "bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed"
+                            : "bg-[#0a51db] border-[#0844c4] cursor-pointer hover:bg-[#0a3fc9] active:shadow-none active:translate-y-[2px]"
+                        }`}
+                        onClick={openGenerateModal}
+                        disabled={approvedDocumentsCount !== 4}
+                        aria-label={
+                          apiKeys.length > 0
+                            ? "Regenerate API key"
+                            : "Generate new API key"
+                        }
+                        type="button"
+                      >
+                        <span
+                          className={`[font-family:'Archivo',Helvetica] font-medium text-xs sm:text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap ${
+                            approvedDocumentsCount !== 4
+                              ? "text-gray-500"
+                              : "text-white"
+                          }`}
+                        >
+                          {approvedDocumentsCount !== 4
+                            ? "Generate new key"
+                            : apiKeys.length > 0
+                              ? "Regenerate new key"
+                              : "Generate new key"}
+                        </span>
+                      </button>
+                    </div>
+                  </header>
+
+                  {approvedDocumentsCount !== 4 ? (
+                    <div className="border-2 border-blue-500 rounded-lg bg-blue-50/30 p-8 sm:p-12">
+                      <div className="flex flex-col items-center justify-center text-center">
+                        {/* Blurred API Key */}
+                        <div className="mb-4 sm:mb-6">
+                          <div className="text-xl sm:text-2xl font-mono text-gray-300 blur-[6px] select-none mb-1">
+                            sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxx
+                          </div>
+                        </div>
+
+                        {/* Hourglass Emoji */}
+                        <div className="mb-4 sm:mb-6 text-2xl sm:text-3xl">
+                          ⌛️
+                        </div>
+
+                        {/* Message Text */}
+                        <p className="text-base sm:text-lg text-gray-700 font-normal">
+                          These will be generated as soon as you're approved!
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-5 w-full">
+                      {apiKeys.length === 0 ? (
+                        <div className="flex items-center justify-center py-8 text-gray-400">
+                          <p className="text-sm">No API keys generated yet</p>
+                        </div>
+                      ) : (
+                        apiKeys.map((keyObj, index) => (
+                          <ApiKeyCard
                             key={index}
-                            className="flex h-[55px] items-center gap-2.5 p-4 border-b border-[#f4f4f4]"
+                            keyObj={keyObj}
+                            index={index}
+                            onCopy={handleCopyKey}
+                          />
+                        ))
+                      )}
+                    </div>
+                  )}
+                </section>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-5 w-full">
+                  <section className="flex flex-col gap-5 p-4 bg-white rounded-[28px] border border-[#efefef]">
+                    <h2 className="text-lg sm:text-xl font-medium">
+                      Calls Overview
+                    </h2>
+                    <div className="grid grid-cols-2 gap-3 w-full">
+                      {overviewCards.map((card, index) => (
+                        <OverviewCard key={index} card={card} />
+                      ))}
+                    </div>
+                  </section>
+
+                  <section className="flex flex-col gap-5 p-4 bg-white rounded-[28px] border border-[#efefef]">
+                    <h2 className="text-lg sm:text-xl font-medium">
+                      Credits purchased vs. consumed
+                    </h2>
+                    <CreditsBarChart
+                      max={10}
+                      data={[
+                        {
+                          name: "Consumed",
+                          value: analytics?.creditsConsumed || 0,
+                        },
+                        {
+                          name: "Purchased",
+                          value: analytics?.creditsPurchased || 0,
+                        },
+                      ]}
+                    />
+                  </section>
+                </div>
+              </section>
+
+              {/* HistoryModal: only mount (and lazy-load) when opened */}
+              {showHistoryModal && (
+                <Suspense fallback={null}>
+                  <HistoryModal
+                    open={showHistoryModal}
+                    onClose={closeHistoryModal}
+                    onOpenBuyCredits={openBuyCreditsModal}
+                    history={creditHistory}
+                    columns={COLUMNS}
+                    pageSize={12}
+                  />
+                </Suspense>
+              )}
+
+              {/* BuyCreditsModal: only mount (and lazy-load) when opened */}
+              {showBuyCreditsModal && (
+                <Suspense fallback={null}>
+                  <BuyCreditsModal
+                    open={showBuyCreditsModal}
+                    onClose={closeBuyCreditsModal}
+                    onShowTransactions={openTransactions}
+                  />
+                </Suspense>
+              )}
+
+              {/* Transactions: only mount (and lazy-load) when opened */}
+              {showTransactions && (
+                <Suspense fallback={null}>
+                  <Transactions
+                    open={showTransactions}
+                    onClose={closeTransactions}
+                    history={creditHistory}
+                    selectedCredits={txSelectedCredits ?? undefined}
+                    selectedAmount={txSelectedAmount ?? undefined}
+                    onProceed={txOnProceed ?? undefined}
+                  />
+                </Suspense>
+              )}
+
+              <section className="flex flex-col gap-5 p-4 sm:p-6 w-full bg-white rounded-[28px] sm:rounded-[36px] border border-[#efefef]">
+                <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-3">
+                  <h2 className="text-lg sm:text-xl font-medium">
+                    Billing & History Table
+                  </h2>
+                  <div className="flex flex-row items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={openHistoryModal}
+                      className="flex-1 sm:flex-initial sm:w-auto px-3 py-2.5 sm:px-4 sm:py-3 bg-gray-200 rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap"
+                    >
+                      View more
+                    </button>
+                    <button
+                      onClick={openBuyCreditsModal}
+                      className="flex-1 sm:flex-initial sm:w-auto px-3 py-2.5 sm:px-4 sm:py-3 bg-blue-600 text-white rounded-xl font-medium text-xs sm:text-sm whitespace-nowrap"
+                    >
+                      Buy more credits
+                    </button>
+                  </div>
+                </header>
+
+                {tableData.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center gap-4 py-16 w-full bg-white rounded-xl border border-[#f7f7f7]">
+                    <img
+                      className="w-24 h-24"
+                      alt="No billing history"
+                      src="https://c.animaapp.com/0yfnJNzQ/img/fluent-color-receipt-32.svg"
+                    />
+                    <p className="text-lg font-medium">No billing history</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Desktop Table View */}
+                    <div className="hidden sm:flex w-full overflow-x-auto">
+                      <div className="flex bg-white rounded-xl border border-[#f7f7f7] w-full">
+                        {COLUMNS.map((column) => (
+                          <div
+                            key={column.key}
+                            className="flex flex-col flex-1"
                           >
-                            <div className="text-xs sm:text-sm text-gray-600">
-                              {row[column.key as keyof typeof row]}
+                            <div className="flex h-[55px] items-center gap-2.5 p-4 bg-[#fbfbfb]">
+                              <div className="text-xs sm:text-sm text-gray-600">
+                                {column.label}
+                              </div>
                             </div>
+                            {tableData.map((row, index) => (
+                              <div
+                                key={index}
+                                className="flex h-[55px] items-center gap-2.5 p-4 border-b border-[#f4f4f4]"
+                              >
+                                <div className="text-xs sm:text-sm text-gray-600">
+                                  {row[column.key as keyof typeof row]}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
 
-                {/* Mobile Card View */}
-                <div className="sm:hidden flex flex-col gap-3">
-                  {tableData.map((row, index) => (
-                    <BillingCard key={index} row={row} />
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
-        </main>
+                    {/* Mobile Card View */}
+                    <div className="sm:hidden flex flex-col gap-3">
+                      {tableData.map((row, index) => (
+                        <BillingCard key={index} row={row} />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </section>
+            </main>
+          </>
+        )}
       </div>
     </>
   );
