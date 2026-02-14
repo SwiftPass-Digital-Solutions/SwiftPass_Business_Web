@@ -1,5 +1,5 @@
 import React, { useMemo, useCallback, useState } from "react";
-import PaystackPop from "@paystack/inline-js";
+
 import { useDashboardStatusQuery } from "@/services/dashboard";
 
 interface TransactionsProps {
@@ -9,7 +9,8 @@ interface TransactionsProps {
   selectedCredits?: number | string;
   selectedAmount?: number;
   checkoutUrl?: string;
-  onPaymentSuccess?: () => void; // ← NEW: triggers billing history refetch
+  onPaymentSuccess?: () => void;
+  onProceed?: () => Promise<boolean>;
 }
 
 interface FrameProps {
@@ -99,11 +100,15 @@ const Transactions: React.FC<TransactionsProps> = ({
   history,
   selectedCredits,
   selectedAmount,
-  checkoutUrl,
-  onPaymentSuccess, // ← NEW
+
+  onPaymentSuccess,
+  onProceed,
 }) => {
   const [showSuccessFrame, setShowSuccessFrame] = useState(false);
+  const [isProceedLoading, setIsProceedLoading] = useState(false);
+
   const tx = history && history.length > 0 ? history[0] : null;
+
   const { data: statusResp } = useDashboardStatusQuery(undefined, {
     skip: !open,
   });
@@ -127,103 +132,41 @@ const Transactions: React.FC<TransactionsProps> = ({
 
   const formatAmount = useCallback((amt: any) => {
     const n = Number(amt ?? 0);
-    return `₦${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `₦${n.toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
   }, []);
 
   const handleClose = useCallback(() => onClose(), [onClose]);
 
-  // ─── Shared Paystack callback logic ────────────────────────────────────────
-  const handlePaystackCallback = useCallback(
-    async (response: any) => {
-      // eslint-disable-next-line no-console
-      console.log("Paystack payment successful", response);
-
-      const callbackUrl = import.meta.env.VITE_PAYSTACK_CALLBACK_URL as string;
-
-      try {
-        const res = await fetch(
-          `${callbackUrl}?reference=${response.reference}`,
-          {
-            method: "GET",
-          },
-        );
-
-        const data = await res.json();
-        // eslint-disable-next-line no-console
-        console.log("Server verification response", data);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("Error verifying payment on server", err);
-      } finally {
-        // ✅ Always refetch billing history after payment — even if our
-        //    verification endpoint is temporarily unreachable, Paystack
-        //    already confirmed the charge on their end.
-        onPaymentSuccess?.();
+  const handleProceed = useCallback(async () => {
+    if (!onProceed) return;
+    setIsProceedLoading(true);
+    try {
+      const success = await onProceed();
+      if (success) {
         setShowSuccessFrame(true);
       }
-    },
-    [onPaymentSuccess],
-  );
-
-  const startPayment = useCallback(() => {
-    // If a hosted checkout URL was provided, open it only when the user
-    // clicks `Proceed` (user requested behavior).
-    if (checkoutUrl) {
-      try {
-        const newWin = window.open(String(checkoutUrl), "_blank");
-        if (newWin) newWin.opener = null;
-      } catch {
-        try {
-          window.location.assign(String(checkoutUrl));
-        } catch {
-          // ignore
-        }
-      }
-      return;
+    } finally {
+      setIsProceedLoading(false);
     }
-    const publicKey =
-      (import.meta.env.VITE_PAYSTACK_PUBLIC_KEY as string) || "";
-    if (!publicKey) {
-      // eslint-disable-next-line no-console
-      console.warn("Missing VITE_PAYSTACK_PUBLIC_KEY environment variable");
-      return;
-    }
+  }, [onProceed]);
 
-    const email =
-      fetchedEmail ?? tx?.customerEmail ?? tx?.email ?? "customer@example.com";
-    const amountNaira =
-      typeof selectedAmount !== "undefined" && selectedAmount !== null
-        ? selectedAmount
-        : (tx?.amount ?? tx?.total ?? 0);
-    const amountKobo = Math.round(Number(amountNaira) * 100);
+  // Called when user clicks "Yay, go home" — refreshes analytics then closes
+  const handleGoHome = useCallback(() => {
+    setShowSuccessFrame(false);
+    onPaymentSuccess?.(); // ← triggers refetch in Api_credits
+    onClose();
+  }, [onPaymentSuccess, onClose]);
 
-    const paystackConfig = {
-      key: publicKey,
-      email,
-      amount: amountKobo,
-      ref: `sp_${Date.now()}`,
-      onClose: () => {
-        // eslint-disable-next-line no-console
-        console.log("Paystack payment closed");
-      },
-      // ✅ Use shared handler — no more duplicated callback blocks
-      callback: handlePaystackCallback,
-    };
-
-    const paystackInstance = new (PaystackPop as any)();
-    const handler = paystackInstance.setup
-      ? paystackInstance.setup(paystackConfig)
-      : (PaystackPop as any).setup(paystackConfig);
-
-    if (handler && typeof handler.open === "function") {
-      handler.open();
-    } else if (handler && typeof (handler as any).openIframe === "function") {
-      (handler as any).openIframe();
-    } else {
-      // eslint-disable-next-line no-console
-      console.warn("Paystack handler does not expose open/openIframe methods");
-    }
-  }, [checkoutUrl, fetchedEmail, selectedAmount, tx, handlePaystackCallback]);
+  // const email =
+  //   fetchedEmail ?? tx?.customerEmail ?? tx?.email ?? "customer@example.com";
+  // const amountNaira =
+  //   typeof selectedAmount !== "undefined" && selectedAmount !== null
+  //     ? selectedAmount
+  //     : (tx?.amount ?? tx?.total ?? 0);
+  // const amountKobo = Math.round(Number(amountNaira) * 100);
 
   if (!open) return null;
 
@@ -269,7 +212,9 @@ const Transactions: React.FC<TransactionsProps> = ({
 
       {!showSuccessFrame && (
         <div
-          className={`fixed top-4 left-4 right-4 bottom-4 sm:left-auto sm:right-4 sm:w-[640px] bg-white rounded-3xl shadow-2xl z-[70] transform transition-transform duration-300 ease-out overflow-y-auto ${open ? "translate-x-0" : "translate-x-full"}`}
+          className={`fixed top-4 left-4 right-4 bottom-4 sm:left-auto sm:right-4 sm:w-[640px] bg-white rounded-3xl shadow-2xl z-[70] transform transition-transform duration-300 ease-out overflow-y-auto ${
+            open ? "translate-x-0" : "translate-x-full"
+          }`}
         >
           <div className="flex flex-col h-full overflow-y-auto">
             <div className="p-4 sm:p-8">
@@ -348,11 +293,16 @@ const Transactions: React.FC<TransactionsProps> = ({
             <div className="p-4 sm:p-6">
               <div className="flex items-center gap-2 relative self-stretch w-full flex-[0_0_auto]">
                 <button
-                  onClick={startPayment}
-                  className="flex items-center justify-center gap-2.5 p-3 relative flex-1 grow bg-[#0047FF] rounded-xl border border-solid border-[#0844c4] shadow-[0px_2px_0px_#dcdcdc]"
+                  onClick={handleProceed}
+                  disabled={isProceedLoading || !onProceed}
+                  className={`flex items-center justify-center gap-2.5 p-3 relative flex-1 grow rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] transition-all ${
+                    isProceedLoading || !onProceed
+                      ? "bg-gray-400 border-gray-500 cursor-not-allowed opacity-60"
+                      : "bg-[#0047FF] border-[#0844c4] hover:bg-[#0039dd] active:scale-[0.98]"
+                  }`}
                 >
                   <span className="relative w-fit mt-[-1.00px] [font-family:'Archivo',Helvetica] font-medium text-white text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
-                    Proceed
+                    {isProceedLoading ? "Processing..." : "Proceed"}
                   </span>
                 </button>
               </div>
@@ -373,10 +323,7 @@ const Transactions: React.FC<TransactionsProps> = ({
             <div className="w-full sm:w-auto rounded-3xl overflow-hidden [animation:fadeIn_0.2s_ease-out]">
               <Frame
                 onClose={() => setShowSuccessFrame(false)}
-                onGoHome={() => {
-                  setShowSuccessFrame(false);
-                  onClose();
-                }}
+                onGoHome={handleGoHome}
               />
             </div>
           </div>

@@ -30,6 +30,7 @@ interface BuyCreditsModalProps {
   onShowTransactions?: (data?: {
     credits: number;
     amount: number;
+    onProceed?: () => Promise<boolean>;
     onPaymentSuccess?: () => void;
     checkoutUrl?: string;
   }) => void;
@@ -144,21 +145,22 @@ PaymentMethodOption.displayName = "PaymentMethodOption";
 const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   open,
   onClose,
-  onShowTransactions: _onShowTransactions,
+  onShowTransactions,
   onPaymentSuccess: _onPaymentSuccess,
 }) => {
+  const [step, setStep] = useState<1 | 2>(1);
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<string>("card");
   const [showCustomAmount, setShowCustomAmount] = useState<boolean>(false);
   const [customAmount, setCustomAmount] = useState<string>("");
   const [customCredits, setCustomCredits] = useState<string>("");
-  const [showPaystack, setShowPaystack] = useState<boolean>(false);
 
   const {
     data: packagesResponse,
     isLoading: packagesLoading,
     error: packagesErrorRaw,
   } = useGetCreditPackagesQuery(undefined);
+
   const packagesErrorMessage =
     (packagesErrorRaw as any)?.data?.message ||
     (packagesErrorRaw ? "Failed to load packages" : null);
@@ -193,10 +195,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
     [],
   );
 
-  const handleShowPaystack = useCallback(() => {
-    setShowPaystack(true);
-  }, []);
-
   const handleSaveCustomPackage = useCallback(async () => {
     const amount = Number(customAmount || 0);
     const credits = Number(customCredits || 0);
@@ -226,7 +224,9 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
     }
   }, [customAmount, customCredits, createCustomPackage]);
 
-  const handleBuyCredits = useCallback(async () => {
+  // The actual payment call — passed as onProceed to Transactions.
+  // Returns true on success so Transactions can show the success popup.
+  const handleBuyCredits = useCallback(async (): Promise<boolean> => {
     const payload = showCustomAmount
       ? { packageId: 0, customAmount: Number(customAmount) || 0 }
       : { packageId: selectedPackage || 0, customAmount: 0 };
@@ -239,17 +239,14 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
           (res as any).message ||
           "Failed to initiate purchase. Please try again.";
         toast.error(msg);
-        return;
+        return false;
       }
 
-      // Get the checkout URL from the response
       const redirectUrl =
         (res as any)?.data?.checkoutUrl || (res as any)?.data?.redirectUrl;
 
       if (redirectUrl) {
         const urlStr = String(redirectUrl);
-
-        // Open checkout URL in new tab
         try {
           const newWin = window.open(urlStr, "_blank");
           if (newWin) newWin.opener = null;
@@ -258,15 +255,14 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             window.location.assign(urlStr);
           } catch {
             toast.error("Failed to open checkout page");
+            return false;
           }
         }
-
-        onClose(); // Close the modal after opening checkout
-        return;
+        return true; // ← signal success to Transactions
       }
 
-      // If no checkout URL, show error
       toast.error("No checkout URL received. Please try again.");
+      return false;
     } catch (err: any) {
       if (err?.status === 401) {
         toast.error("Session expired. Please login again.");
@@ -276,8 +272,9 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
           "Failed to initiate purchase. Please try again.";
         toast.error(message);
       }
+      return false;
     }
-  }, [showCustomAmount, customAmount, selectedPackage, buyCredits, onClose]);
+  }, [showCustomAmount, customAmount, selectedPackage, buyCredits]);
 
   const creditPackages: CreditPackage[] = useMemo(() => {
     const _raw = packagesResponse?.data;
@@ -296,11 +293,48 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   }, [packagesResponse]);
 
   useEffect(() => {
+    if (open) setStep(1);
+  }, [open]);
+
+  useEffect(() => {
     if (selectedPackage === null && creditPackages.length > 0) {
       const first = creditPackages[0];
       if (first) setSelectedPackage(first.id);
     }
   }, [creditPackages, selectedPackage]);
+
+  const canProceed = selectedPackage !== null || (showCustomAmount && !!customAmount && !!customCredits);
+
+  // Step 1 → Step 2: move to Paystack confirmation screen
+  const handleNextStep = useCallback(() => {
+    if (!canProceed) return;
+    setStep(2);
+  }, [canProceed]);
+
+  // Opens Transactions with the correct credits/amount and passes handleBuyCredits as onProceed
+  const handleOpenTransactions = useCallback(() => {
+    const pkg = creditPackages.find((p) => p.id === selectedPackage);
+    const creditsNum = pkg
+      ? Number(String(pkg.credits).replace(/[^0-9]/g, ""))
+      : 0;
+    const amountNum = pkg
+      ? Number(String(pkg.price).replace(/[₦,]/g, ""))
+      : 0;
+
+    onShowTransactions?.({
+      credits: creditsNum,
+      amount: amountNum,
+      onProceed: handleBuyCredits,
+    });
+
+    onClose(); // close BuyCreditsModal so Transactions slides in
+  }, [
+    creditPackages,
+    selectedPackage,
+    onShowTransactions,
+    handleBuyCredits,
+    onClose,
+  ]);
 
   const packageOptions = useMemo(
     () =>
@@ -348,9 +382,9 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
           <header className="flex flex-col items-start gap-4 mb-8">
             <div className="inline-flex items-center gap-3">
               <button
-                onClick={onClose}
+                onClick={step === 2 ? () => setStep(1) : onClose}
                 className="inline-flex items-center justify-center p-3.5 bg-white rounded-xl border border-solid border-[#ededed] shadow-[0px_2px_5.6px_#dbdbdb40] hover:bg-gray-50 active:scale-95 transition-all"
-                aria-label="Go back"
+                aria-label={step === 2 ? "Go back to payment method" : "Close"}
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                   <path
@@ -438,7 +472,11 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
                     <button
                       onClick={handleSaveCustomPackage}
                       disabled={creatingCustom}
-                      className={`text-sm [font-family:'Archivo',Helvetica] self-center transition-colors ${creatingCustom ? "text-gray-400 cursor-not-allowed" : "text-gray-400 hover:text-gray-600"}`}
+                      className={`text-sm [font-family:'Archivo',Helvetica] self-center transition-colors ${
+                        creatingCustom
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
                     >
                       {creatingCustom ? (
                         <span className="inline-flex items-center gap-2">
@@ -458,56 +496,28 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
               <h2 className="[font-family:'Archivo',Helvetica] font-medium text-black text-xl tracking-[-0.60px] leading-[29.0px]">
                 Payment Method
               </h2>
-
-              {!showPaystack ? (
+              {step === 1 ? (
                 <div className="flex items-center gap-5 w-full">
                   {paymentOptions}
                 </div>
               ) : (
-                <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-solid border-[#f2f2f2]">
-                  <div className="flex items-center justify-center w-6 h-6">
+                /* Step 2 — Paystack confirmation (matches design image) */
+                <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border-2 border-blue-500 w-full">
+                  {/* Selected radio */}
+                  <div className="flex items-center justify-center w-6 h-6 shrink-0">
                     <div className="w-5 h-5 rounded-full border-2 border-[#147fea] flex items-center justify-center">
-                      <div className="w-3 h-3 rounded-full bg-[#147fea]" />
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#147fea]" />
                     </div>
                   </div>
-
+                  {/* Paystack logo */}
                   <div className="flex items-center gap-2">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                      <rect
-                        x="0"
-                        y="0"
-                        width="20"
-                        height="4"
-                        rx="1"
-                        fill="#00A8E8"
-                      />
-                      <rect
-                        x="0"
-                        y="6"
-                        width="20"
-                        height="4"
-                        rx="1"
-                        fill="#00A8E8"
-                      />
-                      <rect
-                        x="0"
-                        y="12"
-                        width="16"
-                        height="4"
-                        rx="1"
-                        fill="#00A8E8"
-                      />
-                      <rect
-                        x="0"
-                        y="18"
-                        width="12"
-                        height="4"
-                        rx="1"
-                        fill="#00A8E8"
-                      />
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                      <rect x="0" y="1"  width="20" height="4" rx="1.5" fill="#00C3F7" />
+                      <rect x="0" y="7"  width="20" height="4" rx="1.5" fill="#0BA4DB" />
+                      <rect x="0" y="13" width="16" height="4" rx="1.5" fill="#0074A8" />
+                      <rect x="0" y="19" width="12" height="4" rx="1.5" fill="#00415F" />
                     </svg>
-
-                    <span className="text-lg font-semibold text-black [font-family:'Archivo',Helvetica]">
+                    <span className="[font-family:'Archivo',Helvetica] font-bold text-[#011B33] text-xl tracking-tight">
                       paystack
                     </span>
                   </div>
@@ -516,21 +526,26 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             </section>
           </div>
 
-          <footer className="flex items-center gap-2 w-full">
-            {!showPaystack ? (
+          {/* Desktop Footer */}
+          <footer className="flex items-center gap-2 w-full mt-auto">
+            {step === 1 ? (
               <>
                 <button
                   onClick={onClose}
                   className="flex items-center justify-center gap-2.5 p-3 flex-1 bg-[#f0f0f0] rounded-xl border border-solid border-[#dcdcdc] shadow-[0px_2px_0px_#dcdcdc] hover:bg-gray-200 active:scale-95 transition-all"
                 >
                   <span className="[font-family:'Archivo',Helvetica] font-medium text-black text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
-                    Revoke access
+                    Cancel
                   </span>
                 </button>
-
                 <button
-                  onClick={handleShowPaystack}
-                  className="flex items-center justify-center gap-2.5 p-3 flex-1 bg-[#0a51db] rounded-xl border border-solid border-[#0844c4] shadow-[0px_2px_0px_#dcdcdc] hover:bg-blue-600 active:scale-95 transition-all"
+                  onClick={handleNextStep}
+                  disabled={!canProceed}
+                  className={`flex items-center justify-center gap-2.5 p-3 flex-1 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] active:scale-95 transition-all ${
+                    !canProceed
+                      ? "bg-gray-300 border-gray-400 cursor-not-allowed opacity-60"
+                      : "bg-[#0a51db] border-[#0844c4] hover:bg-[#0a3fc9]"
+                  }`}
                 >
                   <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
                     Buy
@@ -538,24 +553,29 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
                 </button>
               </>
             ) : (
-              <button
-                onClick={handleBuyCredits}
-                disabled={isLoading}
-                className={`flex items-center justify-center gap-2.5 p-4 w-full rounded-xl shadow-[0px_2px_0px_#0037cc] active:scale-95 transition-all ${isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-[#0047FF] hover:bg-[#0039dd]"}`}
-              >
-                {isLoading ? (
-                  <>
-                    <LoadingSpinner />
-                    <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
-                      Processing...
-                    </span>
-                  </>
-                ) : (
-                  <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-base tracking-[-0.48px] leading-[23.2px] whitespace-nowrap">
+              <>
+                <button
+                  onClick={() => setStep(1)}
+                  className="flex items-center justify-center gap-2.5 p-3 flex-1 bg-[#f0f0f0] rounded-xl border border-solid border-[#dcdcdc] shadow-[0px_2px_0px_#dcdcdc] hover:bg-gray-200 active:scale-95 transition-all"
+                >
+                  <span className="[font-family:'Archivo',Helvetica] font-medium text-black text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
+                    Back
+                  </span>
+                </button>
+                <button
+                  onClick={handleOpenTransactions}
+                  disabled={isLoading}
+                  className={`flex items-center justify-center gap-2.5 p-3 flex-1 rounded-xl border border-solid shadow-[0px_2px_0px_#0037cc] active:scale-95 transition-all ${
+                    isLoading
+                      ? "bg-gray-400 border-gray-500 cursor-not-allowed opacity-60"
+                      : "bg-[#0047FF] border-[#0844c4] hover:bg-[#0039dd]"
+                  }`}
+                >
+                  <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap">
                     Buy Credits
                   </span>
-                )}
-              </button>
+                </button>
+              </>
             )}
           </footer>
         </div>
@@ -570,9 +590,9 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         <div className="flex flex-col min-h-full p-4">
           <div className="mb-6">
             <button
-              onClick={onClose}
+              onClick={step === 2 ? () => setStep(1) : onClose}
               className="inline-flex items-center justify-center w-12 h-12 bg-white rounded-2xl hover:bg-gray-50 active:scale-95 transition-all mb-4"
-              aria-label="Go back"
+              aria-label={step === 2 ? "Go back to payment method" : "Close"}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
                 <path
@@ -655,7 +675,11 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
                   <button
                     onClick={handleSaveCustomPackage}
                     disabled={creatingCustom}
-                    className={`text-sm [font-family:'Archivo',Helvetica] self-center transition-colors ${creatingCustom ? "text-gray-400 cursor-not-allowed" : "text-gray-400 hover:text-gray-600"}`}
+                    className={`text-sm [font-family:'Archivo',Helvetica] self-center transition-colors ${
+                      creatingCustom
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
                   >
                     {creatingCustom ? (
                       <span className="inline-flex items-center gap-2">
@@ -675,38 +699,82 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             <h2 className="[font-family:'Archivo',Helvetica] font-medium text-gray-500 text-base">
               Payment Method
             </h2>
-
-            <div className="flex flex-col gap-3">{paymentOptions}</div>
+            {step === 1 ? (
+              <div className="flex flex-col gap-3">{paymentOptions}</div>
+            ) : (
+              /* Step 2 — Paystack confirmation */
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border-2 border-blue-500 w-full">
+                <div className="flex items-center justify-center w-6 h-6 shrink-0">
+                  <div className="w-5 h-5 rounded-full border-2 border-[#147fea] flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#147fea]" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <rect x="0" y="1"  width="20" height="4" rx="1.5" fill="#00C3F7" />
+                    <rect x="0" y="7"  width="20" height="4" rx="1.5" fill="#0BA4DB" />
+                    <rect x="0" y="13" width="16" height="4" rx="1.5" fill="#0074A8" />
+                    <rect x="0" y="19" width="12" height="4" rx="1.5" fill="#00415F" />
+                  </svg>
+                  <span className="[font-family:'Archivo',Helvetica] font-bold text-[#011B33] text-xl tracking-tight">
+                    paystack
+                  </span>
+                </div>
+              </div>
+            )}
           </section>
 
+          {/* Mobile Footer */}
           <div className="flex flex-col gap-3 mt-auto">
-            <button
-              onClick={handleBuyCredits}
-              disabled={isLoading}
-              className={`flex items-center justify-center gap-2.5 py-4 w-full rounded-2xl transition-all ${isLoading ? "bg-gray-600 cursor-not-allowed" : "bg-[#0047FF] hover:bg-[#0039dd] active:scale-95"}`}
-            >
-              {isLoading ? (
-                <>
-                  <LoadingSpinner />
+            {step === 1 ? (
+              <>
+                <button
+                  onClick={handleNextStep}
+                  disabled={!canProceed}
+                  className={`flex items-center justify-center gap-2.5 py-4 w-full rounded-2xl transition-all ${
+                    !canProceed
+                      ? "bg-gray-400 cursor-not-allowed opacity-60"
+                      : "bg-[#0047FF] hover:bg-[#0039dd] active:scale-95"
+                  }`}
+                >
                   <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-base">
-                    Processing...
+                    Buy
                   </span>
-                </>
-              ) : (
-                <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-base">
-                  Buy
-                </span>
-              )}
-            </button>
-
-            <button
-              onClick={onClose}
-              className="flex items-center justify-center py-4 w-full"
-            >
-              <span className="[font-family:'Archivo',Helvetica] font-normal text-gray-400 text-base">
-                Revoke access
-              </span>
-            </button>
+                </button>
+                <button
+                  onClick={onClose}
+                  className="flex items-center justify-center py-4 w-full"
+                >
+                  <span className="[font-family:'Archivo',Helvetica] font-normal text-gray-400 text-base">
+                    Cancel
+                  </span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={handleOpenTransactions}
+                  disabled={isLoading}
+                  className={`flex items-center justify-center gap-2.5 py-4 w-full rounded-2xl transition-all ${
+                    isLoading
+                      ? "bg-gray-400 cursor-not-allowed opacity-60"
+                      : "bg-[#0047FF] hover:bg-[#0039dd] active:scale-95"
+                  }`}
+                >
+                  <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-base">
+                    Buy Credits
+                  </span>
+                </button>
+                <button
+                  onClick={() => setStep(1)}
+                  className="flex items-center justify-center py-4 w-full"
+                >
+                  <span className="[font-family:'Archivo',Helvetica] font-normal text-gray-400 text-base">
+                    Back
+                  </span>
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>
