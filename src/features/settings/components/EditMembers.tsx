@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getAuthHeaders } from "@/utils/api";
 import { endpoints } from "@/constants";
 import { BusinessRoleEnum } from "@/constants/enums";
+import { toast } from "react-toastify";
 
 export type MemberFormData = {
   id?: number;
@@ -26,6 +27,7 @@ export const Frame: React.FC<{
     note: "",
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const isEdit = Boolean(formData.id);
 
   useEffect(() => {
     if (initialData) {
@@ -133,8 +135,9 @@ export const Frame: React.FC<{
       if (onInviteSent) onInviteSent(payload.workEmail);
       if (onClose) onClose();
     } catch (err: any) {
-      console.error("Failed to send invite:", err);
-      alert("Failed to send invite: " + (err?.message || "Unknown error"));
+      toast.error(
+        "Failed to send invite: " + (err?.message || "Unknown error"),
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -198,9 +201,16 @@ export const Frame: React.FC<{
               name="fullName"
               value={formData.fullName}
               onChange={handleInputChange}
+              disabled={isEdit}
+              aria-describedby={isEdit ? "fullNameHelp" : undefined}
               placeholder="First Name"
               className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 font-['Archivo'] text-base text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+            {isEdit && (
+              <p id="fullNameHelp" className="mt-2 text-sm text-gray-500">
+                Full name cannot be edited.
+              </p>
+            )}
           </div>
 
           {/* Work Email */}
@@ -217,9 +227,16 @@ export const Frame: React.FC<{
               name="workEmail"
               value={formData.workEmail}
               onChange={handleInputChange}
+              disabled={isEdit}
+              aria-describedby={isEdit ? "workEmailHelp" : undefined}
               placeholder="Work Email Address"
               className="w-full rounded-lg border border-gray-200 bg-white px-4 py-3 font-['Archivo'] text-base text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
             />
+            {isEdit && (
+              <p id="workEmailHelp" className="mt-2 text-sm text-gray-500">
+                Work email cannot be edited.
+              </p>
+            )}
           </div>
 
           {/* Phone Number */}

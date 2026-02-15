@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { endpoints } from "@/constants";
 import { getAuthHeaders } from "@/utils/api";
+import { toast } from "react-toastify";
 
 export const Frame: React.FC<{
   onClose?: () => void;
@@ -67,8 +68,9 @@ export const Frame: React.FC<{
       if (onInviteSent) onInviteSent(payload.email);
       if (onClose) onClose();
     } catch (err: any) {
-      console.error("Failed to send invite:", err);
-      alert("Failed to send invite: " + (err?.message || "Unknown error"));
+      toast.error(
+        "Failed to send invite: " + (err?.message || "Unknown error"),
+      );
     } finally {
       setIsSubmitting(false);
     }

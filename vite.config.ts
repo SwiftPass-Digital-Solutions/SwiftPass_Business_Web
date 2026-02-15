@@ -4,7 +4,19 @@ import tailwindcss from "@tailwindcss/vite";
 import svgr from "vite-plugin-svgr";
 
 const CSP_DEV =
-  "default-src 'self' 'unsafe-inline' http://localhost:5173 swiftpass-backend.onrender.com fonts.googleapis.com; img-src 'self' blob: data: https: https://lh3.googleusercontent.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src https://checkout.paystack.com; frame-ancestors 'none'; upgrade-insecure-requests;";
+  "default-src 'self'; " +
+  "connect-src 'self' https://swiftpass-backend.onrender.com https://api.paystack.co; " +
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co; " +
+  "script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://js.paystack.co; " +
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+  "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
+  "font-src 'self' https://fonts.gstatic.com; " +
+  "img-src 'self' blob: data: https: https://lh3.googleusercontent.com; " +
+  "frame-src https://checkout.paystack.com; " +
+  "object-src 'none'; " +
+  "base-uri 'self'; " +
+  "form-action 'self'; " +
+  "frame-ancestors 'none';";
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), svgr()],
