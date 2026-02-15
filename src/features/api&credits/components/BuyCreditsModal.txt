@@ -1,4 +1,3 @@
-/// <reference types="vite/client" />
 import React, { useState, useCallback, useMemo, useEffect } from "react";
 import { toast } from "react-toastify";
 import {
@@ -6,68 +5,7 @@ import {
   useGetCreditPackagesQuery,
   useCreateCustomPackageMutation,
 } from "@/services/credits";
-import { useDashboardStatusQuery } from "@/services/dashboard";
-import { getCookie } from "@/utils";
 
-// ─── Paystack Popup Types ────────────────────────────────────────────────────
-declare global {
-  interface Window {
-    PaystackPop: {
-      /**
-       * v1 setup — works with either:
-       *   - key + email + amount (new transaction)
-       *   - key + access_code   (resume an initialised transaction)
-       */
-      setup: (options: {
-        key: string;
-        access_code?: string; // resume a backend-initialised transaction
-        email?: string;
-        amount?: number; // kobo
-        ref?: string;
-        currency?: string;
-        callback: (response: {
-          reference: string;
-          trxref: string;
-          trans?: string;
-          status?: string;
-        }) => void;
-        onClose: () => void;
-      }) => { openIframe: () => void };
-    };
-  }
-}
-
-/**
- * Dynamically injects the Paystack inline script once.
- * Resolves immediately if already loaded.
- */
-const loadPaystackScript = (): Promise<void> =>
-  new Promise((resolve, reject) => {
-    if (typeof window !== "undefined" && window.PaystackPop) {
-      resolve();
-      return;
-    }
-    // Avoid double-injection
-    const existing = document.querySelector(
-      'script[src="https://js.paystack.co/v1/inline.js"]',
-    );
-    if (existing) {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () =>
-        reject(new Error("Paystack script failed")),
-      );
-      return;
-    }
-    const script = document.createElement("script");
-    script.src = "https://js.paystack.co/v1/inline.js";
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () =>
-      reject(new Error("Could not load Paystack inline script"));
-    document.head.appendChild(script);
-  });
-
-// ─── Component interfaces ────────────────────────────────────────────────────
 interface CreditPackage {
   id: number;
   label: string;
@@ -114,7 +52,6 @@ const PAYMENT_METHODS: PaymentMethod[] = [
   },
 ];
 
-// ─── Sub-components ──────────────────────────────────────────────────────────
 const LoadingSpinner = () => (
   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
     <circle
@@ -174,6 +111,7 @@ const CreditPackageOption = React.memo(
     </button>
   ),
 );
+
 CreditPackageOption.displayName = "CreditPackageOption";
 
 const PaymentMethodOption = React.memo(
@@ -201,14 +139,14 @@ const PaymentMethodOption = React.memo(
     </button>
   ),
 );
+
 PaymentMethodOption.displayName = "PaymentMethodOption";
 
-// ─── Main Modal ──────────────────────────────────────────────────────────────
 const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   open,
   onClose,
   onShowTransactions,
-  onPaymentSuccess,
+  onPaymentSuccess: _onPaymentSuccess,
 }) => {
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
@@ -230,11 +168,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
   const [buyCredits, { isLoading }] = useBuyCreditsMutation();
   const [createCustomPackage, { isLoading: creatingCustom }] =
     useCreateCustomPackageMutation();
-
-  const { data: statusResp } = useDashboardStatusQuery(undefined, {
-    skip: !open,
-  });
-  const userEmail: string = statusResp?.data?.email ?? "";
 
   const handleSelectPackage = useCallback((packageId: number) => {
     setSelectedPackage(packageId);
@@ -291,31 +224,58 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
     }
   }, [customAmount, customCredits, createCustomPackage]);
 
-  /**
-   * Extracts the Paystack access code from a checkout URL.
-   * e.g. "https://checkout.paystack.com/0peioxfhpn" → "0peioxfhpn"
-   */
-  const extractAccessCode = (url: string): string | null => {
-    try {
-      const { pathname } = new URL(url);
-      const code = pathname.replace(/^\//, "").split("/")[0];
-      return code || null;
-    } catch {
-      return null;
-    }
-  };
+  // The actual payment call — passed as onProceed to Transactions.
+  // Returns true on success so Transactions can show the success popup.
+  const handleBuyCredits = useCallback(async (): Promise<boolean> => {
+    const payload = showCustomAmount
+      ? { packageId: 0, customAmount: Number(customAmount) || 0 }
+      : { packageId: selectedPackage || 0, customAmount: 0 };
 
-  /**
-   * Opens the Paystack inline popup.
-   *
-   * Strategy (in order):
-   *   1. accessCode in response body           → PaystackPop.newTransaction
-   *   2. checkoutUrl from backend              → extract accessCode from URL → PaystackPop.newTransaction
-   *   3. publicKey + email + amount in body    → PaystackPop.setup (v1)
-   *
-   * Returns true when the customer completes payment so <Transactions>
-   * can flip to the success screen.
-   */
+    try {
+      const res = await buyCredits(payload).unwrap();
+
+      if (res && (res as any).status === false) {
+        const msg =
+          (res as any).message ||
+          "Failed to initiate purchase. Please try again.";
+        toast.error(msg);
+        return false;
+      }
+
+      const redirectUrl =
+        (res as any)?.data?.checkoutUrl || (res as any)?.data?.redirectUrl;
+
+      if (redirectUrl) {
+        const urlStr = String(redirectUrl);
+        try {
+          const newWin = window.open(urlStr, "_blank");
+          if (newWin) newWin.opener = null;
+        } catch {
+          try {
+            window.location.assign(urlStr);
+          } catch {
+            toast.error("Failed to open checkout page");
+            return false;
+          }
+        }
+        return true; // ← signal success to Transactions
+      }
+
+      toast.error("No checkout URL received. Please try again.");
+      return false;
+    } catch (err: any) {
+      if (err?.status === 401) {
+        toast.error("Session expired. Please login again.");
+      } else {
+        const message =
+          (err as any)?.data?.message ||
+          "Failed to initiate purchase. Please try again.";
+        toast.error(message);
+      }
+      return false;
+    }
+  }, [showCustomAmount, customAmount, selectedPackage, buyCredits]);
+
   const creditPackages: CreditPackage[] = useMemo(() => {
     const _raw = packagesResponse?.data;
     const _rawPackages = Array.isArray(_raw) ? _raw : [];
@@ -332,154 +292,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
     }));
   }, [packagesResponse]);
 
-  const handleBuyCredits = useCallback(async (): Promise<boolean> => {
-    const payload = showCustomAmount
-      ? { packageId: 0, customAmount: Number(customAmount) || 0 }
-      : { packageId: selectedPackage || 0, customAmount: 0 };
-
-    try {
-      const res = await buyCredits(payload).unwrap();
-
-      if (res && (res as any).status === false) {
-        toast.error(
-          (res as any).message ||
-            "Failed to initiate purchase. Please try again.",
-        );
-        return false;
-      }
-
-      const data = (res as any)?.data ?? {};
-
-      // ✅ Store the reference from your buy API
-      const transactionReference = data.reference;
-
-      // ── Load Paystack script ───────────────────────────────────────────────
-      try {
-        await loadPaystackScript();
-      } catch {
-        toast.error(
-          "Could not load payment processor. Please check your connection.",
-        );
-        return false;
-      }
-
-      // Resolve the public key: prefer backend-supplied, else env var
-      const publicKey: string =
-        data.publicKey || import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "";
-
-      // Amount in kobo
-      const pkgForAmount = creditPackages.find((p) => p.id === selectedPackage);
-      const amountNaira = pkgForAmount
-        ? Number(String(pkgForAmount.price).replace(/[₦,]/g, ""))
-        : showCustomAmount
-          ? Number(customAmount) || 0
-          : 0;
-      const amountKobo = amountNaira * 100;
-
-      const verifyPayment = async (reference: string): Promise<boolean> => {
-        try {
-          const baseUrl = import.meta.env.VITE_API_URL;
-          const token = getCookie("token");
-          const res = await fetch(
-            `${baseUrl}/payments/verify?trxref=${reference}&reference=${reference}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-          const json = await res.json();
-          if (!res.ok || json?.status === false) {
-            toast.error(json?.message || "Payment verification failed");
-            return false;
-          }
-          return true;
-        } catch {
-          toast.error("Could not verify payment. Please contact support.");
-          return false;
-        }
-      };
-
-      const openWithAccessCode = (code: string): Promise<boolean> =>
-        new Promise((resolve) => {
-          const handler = window.PaystackPop.setup({
-            key: publicKey,
-            email: userEmail,
-            amount: amountKobo,
-            access_code: code,
-            callback: (_response: { reference: string; trxref: string }) => {
-              // ✅ Use the reference from your buy API instead of Paystack's response
-              verifyPayment(transactionReference).then(resolve);
-            },
-            onClose: () => {
-              toast.info("Payment cancelled");
-              resolve(false);
-            },
-          });
-          handler.openIframe();
-        });
-
-      // ── Strategy 1: access code already in response body ──────────────────
-      const directAccessCode: string | null = data.accessCode ?? null;
-      if (directAccessCode && publicKey) {
-        return openWithAccessCode(directAccessCode);
-      }
-
-      // ── Strategy 2: extract access code from checkoutUrl ──────────────────
-      const checkoutUrl: string = data.checkoutUrl || data.redirectUrl || "";
-      if (checkoutUrl) {
-        const codeFromUrl = extractAccessCode(checkoutUrl);
-        if (codeFromUrl && publicKey) {
-          return openWithAccessCode(codeFromUrl);
-        }
-      }
-
-      // ── Strategy 3: v1 setup with explicit params ─────────────────────────
-      if (publicKey && data.email && data.amount) {
-        return new Promise<boolean>((resolve) => {
-          const handler = window.PaystackPop.setup({
-            key: publicKey,
-            email: data.email,
-            amount: Number(data.amount), // kobo
-            ref: data.reference,
-            currency: "NGN",
-            callback: (_response: { reference: string; trxref: string }) => {
-              // ✅ Use the reference from your buy API
-              verifyPayment(transactionReference).then(resolve);
-            },
-            onClose: () => {
-              toast.info("Payment window closed");
-              resolve(false);
-            },
-          });
-          handler.openIframe();
-        });
-      }
-
-      toast.error("Unable to open payment popup. Please try again.");
-      return false;
-    } catch (err: any) {
-      if (err?.status === 401) {
-        toast.error("Session expired. Please login again.");
-      } else {
-        toast.error(
-          (err as any)?.data?.message ||
-            "Failed to initiate purchase. Please try again.",
-        );
-      }
-      return false;
-    }
-  }, [
-    showCustomAmount,
-    customAmount,
-    selectedPackage,
-    buyCredits,
-    userEmail,
-    creditPackages,
-  ]);
-
   useEffect(() => {
     if (open) setStep(1);
   }, [open]);
@@ -491,30 +303,31 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
     }
   }, [creditPackages, selectedPackage]);
 
-  const canProceed =
-    selectedPackage !== null ||
-    (showCustomAmount && !!customAmount && !!customCredits);
+  const canProceed = selectedPackage !== null || (showCustomAmount && !!customAmount && !!customCredits);
 
+  // Step 1 → Step 2: move to Paystack confirmation screen
   const handleNextStep = useCallback(() => {
     if (!canProceed) return;
     setStep(2);
   }, [canProceed]);
 
+  // Opens Transactions with the correct credits/amount and passes handleBuyCredits as onProceed
   const handleOpenTransactions = useCallback(() => {
     const pkg = creditPackages.find((p) => p.id === selectedPackage);
     const creditsNum = pkg
       ? Number(String(pkg.credits).replace(/[^0-9]/g, ""))
       : 0;
-    const amountNum = pkg ? Number(String(pkg.price).replace(/[₦,]/g, "")) : 0;
+    const amountNum = pkg
+      ? Number(String(pkg.price).replace(/[₦,]/g, ""))
+      : 0;
 
     onShowTransactions?.({
       credits: creditsNum,
       amount: amountNum,
       onProceed: handleBuyCredits,
-      onPaymentSuccess,
     });
 
-    onClose();
+    onClose(); // close BuyCreditsModal so Transactions slides in
   }, [
     creditPackages,
     selectedPackage,
@@ -551,77 +364,6 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
 
   if (!open) return null;
 
-  // ── Shared JSX blocks ────────────────────────────────────────────────────
-  const PaystackConfirmed = (
-    <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border-2 border-blue-500 w-full">
-      <div className="flex items-center justify-center w-6 h-6 shrink-0">
-        <div className="w-5 h-5 rounded-full border-2 border-[#147fea] flex items-center justify-center">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#147fea]" />
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-          <rect x="0" y="1" width="20" height="4" rx="1.5" fill="#00C3F7" />
-          <rect x="0" y="7" width="20" height="4" rx="1.5" fill="#0BA4DB" />
-          <rect x="0" y="13" width="16" height="4" rx="1.5" fill="#0074A8" />
-          <rect x="0" y="19" width="12" height="4" rx="1.5" fill="#00415F" />
-        </svg>
-        <span className="[font-family:'Archivo',Helvetica] font-bold text-[#011B33] text-xl tracking-tight">
-          paystack
-        </span>
-      </div>
-    </div>
-  );
-
-  const CustomAmountForm = (
-    <div className="flex flex-col items-start gap-3 p-4 bg-white rounded-xl border border-solid border-[#f2f2f2]">
-      <div className="grid grid-cols-2 gap-3 w-full">
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-700 [font-family:'Archivo',Helvetica]">
-            Custom amount
-          </label>
-          <input
-            type="text"
-            placeholder="Enter amount"
-            value={customAmount}
-            onChange={handleCustomAmountChange}
-            className="px-4 py-3 rounded-lg border border-solid border-[#e6e6e6] text-gray-700 placeholder:text-gray-400 [font-family:'Archivo',Helvetica] focus:outline-none focus:border-[#147fea] transition-colors"
-          />
-        </div>
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-gray-700 [font-family:'Archivo',Helvetica]">
-            Credit
-          </label>
-          <input
-            type="text"
-            placeholder="Credit no"
-            value={customCredits}
-            onChange={handleCustomCreditsChange}
-            className="px-4 py-3 rounded-lg border border-solid border-[#e6e6e6] text-gray-700 placeholder:text-gray-400 [font-family:'Archivo',Helvetica] focus:outline-none focus:border-[#147fea] transition-colors"
-          />
-        </div>
-      </div>
-      <button
-        onClick={handleSaveCustomPackage}
-        disabled={creatingCustom}
-        className={`text-sm [font-family:'Archivo',Helvetica] self-center transition-colors ${
-          creatingCustom
-            ? "text-gray-400 cursor-not-allowed"
-            : "text-gray-400 hover:text-gray-600"
-        }`}
-      >
-        {creatingCustom ? (
-          <span className="inline-flex items-center gap-2">
-            <LoadingSpinner />
-            <span>Saving...</span>
-          </span>
-        ) : (
-          "Save new amount"
-        )}
-      </button>
-    </div>
-  );
-
   return (
     <>
       <div
@@ -630,7 +372,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         aria-hidden="true"
       />
 
-      {/* ── Desktop ──────────────────────────────────────────────────────────── */}
+      {/* Desktop View */}
       <div
         className={`hidden sm:block fixed top-4 right-4 bottom-4 w-full sm:w-[640px] bg-white rounded-3xl shadow-2xl z-[70] transform transition-transform duration-300 ease-out overflow-hidden ${
           open ? "translate-x-0" : "translate-x-full"
@@ -654,10 +396,12 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
                   />
                 </svg>
               </button>
+
               <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-2xl tracking-[-0.72px] leading-[34.8px] whitespace-nowrap">
                 Buy More Credits Flow
               </h1>
             </div>
+
             <p className="[font-family:'Archivo',Helvetica] font-normal text-[#6b7280] text-xl tracking-[-0.60px] leading-[29.0px]">
               Keep your services running smoothly. Add credits to continue
               verifying customers without interruptions
@@ -665,11 +409,11 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
           </header>
 
           <div className="flex flex-col gap-6 mb-8">
-            {/* Package selection */}
             <section className="flex flex-col gap-3 p-3 rounded-3xl border border-solid border-[#dcdcdc]">
               <h2 className="[font-family:'Archivo',Helvetica] font-medium text-black text-xl tracking-[-0.60px] leading-[29.0px]">
                 Choose Credit Package
               </h2>
+
               <div className="flex flex-col gap-4">
                 {packagesLoading ? (
                   <div className="flex items-center gap-2 text-sm text-gray-600">
@@ -695,11 +439,59 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
                   </button>
                 )}
 
-                {showCustomAmount && CustomAmountForm}
+                {showCustomAmount && (
+                  <div className="flex flex-col items-start gap-3 p-4 bg-white rounded-xl border border-solid border-[#f2f2f2]">
+                    <div className="grid grid-cols-2 gap-3 w-full">
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700 [font-family:'Archivo',Helvetica]">
+                          Custom amount
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Enter amount"
+                          value={customAmount}
+                          onChange={handleCustomAmountChange}
+                          className="px-4 py-3 rounded-lg border border-solid border-[#e6e6e6] text-gray-700 placeholder:text-gray-400 [font-family:'Archivo',Helvetica] focus:outline-none focus:border-[#147fea] transition-colors"
+                        />
+                      </div>
+
+                      <div className="flex flex-col gap-2">
+                        <label className="text-sm font-medium text-gray-700 [font-family:'Archivo',Helvetica]">
+                          Credit
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Credit no"
+                          value={customCredits}
+                          onChange={handleCustomCreditsChange}
+                          className="px-4 py-3 rounded-lg border border-solid border-[#e6e6e6] text-gray-700 placeholder:text-gray-400 [font-family:'Archivo',Helvetica] focus:outline-none focus:border-[#147fea] transition-colors"
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleSaveCustomPackage}
+                      disabled={creatingCustom}
+                      className={`text-sm [font-family:'Archivo',Helvetica] self-center transition-colors ${
+                        creatingCustom
+                          ? "text-gray-400 cursor-not-allowed"
+                          : "text-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      {creatingCustom ? (
+                        <span className="inline-flex items-center gap-2">
+                          <LoadingSpinner />
+                          <span>Saving...</span>
+                        </span>
+                      ) : (
+                        "Save new amount"
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
 
-            {/* Payment method */}
             <section className="flex flex-col gap-3 p-3 rounded-3xl border border-solid border-[#dcdcdc]">
               <h2 className="[font-family:'Archivo',Helvetica] font-medium text-black text-xl tracking-[-0.60px] leading-[29.0px]">
                 Payment Method
@@ -709,12 +501,32 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
                   {paymentOptions}
                 </div>
               ) : (
-                PaystackConfirmed
+                /* Step 2 — Paystack confirmation (matches design image) */
+                <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border-2 border-blue-500 w-full">
+                  {/* Selected radio */}
+                  <div className="flex items-center justify-center w-6 h-6 shrink-0">
+                    <div className="w-5 h-5 rounded-full border-2 border-[#147fea] flex items-center justify-center">
+                      <div className="w-2.5 h-2.5 rounded-full bg-[#147fea]" />
+                    </div>
+                  </div>
+                  {/* Paystack logo */}
+                  <div className="flex items-center gap-2">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                      <rect x="0" y="1"  width="20" height="4" rx="1.5" fill="#00C3F7" />
+                      <rect x="0" y="7"  width="20" height="4" rx="1.5" fill="#0BA4DB" />
+                      <rect x="0" y="13" width="16" height="4" rx="1.5" fill="#0074A8" />
+                      <rect x="0" y="19" width="12" height="4" rx="1.5" fill="#00415F" />
+                    </svg>
+                    <span className="[font-family:'Archivo',Helvetica] font-bold text-[#011B33] text-xl tracking-tight">
+                      paystack
+                    </span>
+                  </div>
+                </div>
               )}
             </section>
           </div>
 
-          {/* Desktop footer */}
+          {/* Desktop Footer */}
           <footer className="flex items-center gap-2 w-full mt-auto">
             {step === 1 ? (
               <>
@@ -769,7 +581,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         </div>
       </div>
 
-      {/* ── Mobile ───────────────────────────────────────────────────────────── */}
+      {/* Mobile View */}
       <div
         className={`sm:hidden fixed inset-0 bg-white z-[70] transform transition-transform duration-300 ease-out overflow-y-auto ${
           open ? "translate-x-0" : "translate-x-full"
@@ -795,6 +607,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             <h1 className="[font-family:'Archivo',Helvetica] font-medium text-black text-2xl tracking-[-0.72px] leading-[34.8px] mb-1">
               Buy More Credits Flow
             </h1>
+
             <p className="[font-family:'Archivo',Helvetica] font-normal text-gray-400 text-sm leading-relaxed">
               Keep your services running smoothly. Add credits to continue
               verifying customers without interruptions
@@ -805,6 +618,7 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             <h2 className="[font-family:'Archivo',Helvetica] font-medium text-gray-500 text-base">
               Choose Credit Package
             </h2>
+
             <div className="flex flex-col gap-3">
               {packagesLoading ? (
                 <div className="flex items-center gap-2 text-sm text-gray-400">
@@ -828,7 +642,56 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
                 </span>
               </button>
 
-              {showCustomAmount && CustomAmountForm}
+              {showCustomAmount && (
+                <div className="flex flex-col items-start gap-3 p-4 bg-white rounded-2xl">
+                  <div className="grid grid-cols-2 gap-3 w-full">
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700 [font-family:'Archivo',Helvetica]">
+                        Custom amount
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter amount"
+                        value={customAmount}
+                        onChange={handleCustomAmountChange}
+                        className="px-4 py-3 rounded-lg border border-solid border-[#e6e6e6] text-gray-700 placeholder:text-gray-400 [font-family:'Archivo',Helvetica] focus:outline-none focus:border-[#147fea] transition-colors"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-sm font-medium text-gray-700 [font-family:'Archivo',Helvetica]">
+                        Credit
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Credit no"
+                        value={customCredits}
+                        onChange={handleCustomCreditsChange}
+                        className="px-4 py-3 rounded-lg border border-solid border-[#e6e6e6] text-gray-700 placeholder:text-gray-400 [font-family:'Archivo',Helvetica] focus:outline-none focus:border-[#147fea] transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSaveCustomPackage}
+                    disabled={creatingCustom}
+                    className={`text-sm [font-family:'Archivo',Helvetica] self-center transition-colors ${
+                      creatingCustom
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {creatingCustom ? (
+                      <span className="inline-flex items-center gap-2">
+                        <LoadingSpinner />
+                        <span>Saving...</span>
+                      </span>
+                    ) : (
+                      "Save new amount"
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
@@ -839,11 +702,29 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
             {step === 1 ? (
               <div className="flex flex-col gap-3">{paymentOptions}</div>
             ) : (
-              PaystackConfirmed
+              /* Step 2 — Paystack confirmation */
+              <div className="flex items-center gap-3 p-4 bg-white rounded-2xl border-2 border-blue-500 w-full">
+                <div className="flex items-center justify-center w-6 h-6 shrink-0">
+                  <div className="w-5 h-5 rounded-full border-2 border-[#147fea] flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#147fea]" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <rect x="0" y="1"  width="20" height="4" rx="1.5" fill="#00C3F7" />
+                    <rect x="0" y="7"  width="20" height="4" rx="1.5" fill="#0BA4DB" />
+                    <rect x="0" y="13" width="16" height="4" rx="1.5" fill="#0074A8" />
+                    <rect x="0" y="19" width="12" height="4" rx="1.5" fill="#00415F" />
+                  </svg>
+                  <span className="[font-family:'Archivo',Helvetica] font-bold text-[#011B33] text-xl tracking-tight">
+                    paystack
+                  </span>
+                </div>
+              </div>
             )}
           </section>
 
-          {/* Mobile footer */}
+          {/* Mobile Footer */}
           <div className="flex flex-col gap-3 mt-auto">
             {step === 1 ? (
               <>
