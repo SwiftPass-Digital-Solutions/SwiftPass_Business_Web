@@ -346,7 +346,7 @@ const Api_credits = () => {
         }
 
         // Generate Sandbox keys on frontend
-        for (const env of sandboxEnvs) {
+        sandboxEnvs.forEach(() => {
           // Generate a mock sandbox key in format: sk-test_{8-hex}_{32-alphanumeric}
           const generateHex = (length: number) => {
             let result = "";
@@ -380,7 +380,7 @@ const Api_credits = () => {
             type: "Test Key",
             revoked: false,
           });
-        }
+        });
 
         // Process backend results for Live keys
         if (promises.length > 0) {

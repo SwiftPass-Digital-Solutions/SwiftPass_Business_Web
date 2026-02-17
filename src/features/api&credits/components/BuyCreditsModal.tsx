@@ -42,7 +42,6 @@ declare global {
  * Resolves immediately if already loaded.
  */
 const PAYSTACK_SCRIPT_URL = "https://js.paystack.co/v1/inline.js";
-const PAYSTACK_BRAND = "paystack";
 
 const loadPaystackScript = (): Promise<void> =>
   new Promise((resolve, reject) => {
