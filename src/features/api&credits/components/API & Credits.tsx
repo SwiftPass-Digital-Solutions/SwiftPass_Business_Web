@@ -76,7 +76,11 @@ BillingCard.displayName = "BillingCard";
 
 const Api_credits = () => {
   // Fetch credits analytics via shared hook (DRY, uses configured endpoints)
-  const { creditsAnalytics, loading: analyticsLoading } = useCreditsAnalytics();
+  const {
+    creditsAnalytics,
+    loading: analyticsLoading,
+    refetch: refetchCredits,
+  } = useCreditsAnalytics();
 
   const [generateApiKey, { isLoading: isGenerating }] =
     useGenerateApiKeyMutation();
@@ -163,6 +167,11 @@ const Api_credits = () => {
     { key: string; type: string; revoked?: boolean }[]
   >([]);
 
+  // Persists across reloads so we can show "key exists but hidden" after session loss
+  const [hasExistingApiKey, setHasExistingApiKey] = useState<boolean>(
+    () => localStorage.getItem("hasApiKey") === "true",
+  );
+
   // Track when chart has finished rendering
   const [chartRendered, setChartRendered] = useState(false);
 
@@ -223,8 +232,10 @@ const Api_credits = () => {
 
   // Modal state for generating/regenerating keys
   const [showGenerateModal, setShowGenerateModal] = useState<boolean>(false);
-  const [selectedEnvs, setSelectedEnvs] = useState<{ Live: boolean }>({
+  type Env = "Live" | "Sandbox";
+  const [selectedEnvs, setSelectedEnvs] = useState<Record<Env, boolean>>({
     Live: true,
+    Sandbox: false,
   });
   const [modalStep, setModalStep] = useState<number>(1);
   const [lastGeneratedKeys, setLastGeneratedKeys] = useState<
@@ -234,7 +245,7 @@ const Api_credits = () => {
   const [lastRevokedEnvs, setLastRevokedEnvs] = useState<string[] | null>(null);
 
   const openGenerateModal = useCallback(() => {
-    setSelectedEnvs({ Live: true });
+    setSelectedEnvs({ Live: true, Sandbox: true });
     setModalStep(1);
     setModalMode("generate");
     setShowGenerateModal(true);
@@ -243,14 +254,24 @@ const Api_credits = () => {
   const closeGenerateModal = useCallback(() => setShowGenerateModal(false), []);
 
   const openRevokeModal = useCallback(() => {
-    setSelectedEnvs({ Live: false });
+    setSelectedEnvs({ Live: false, Sandbox: false });
     setModalStep(1);
     setModalMode("revoke");
     setShowGenerateModal(true);
   }, []);
 
-  const toggleEnv = useCallback((_env?: "Live") => {
-    setSelectedEnvs((s) => ({ Live: !s.Live }));
+  const toggleEnv = useCallback((env: Env = "Live") => {
+    setSelectedEnvs((s) => ({ ...s, [env]: !s[env] }) as Record<Env, boolean>);
+  }, []);
+
+  const maskApiKey = useCallback((key: string): string => {
+    if (!key || key.length <= 16) return key;
+
+    const visibleStart = key.substring(0, 12);
+    const visibleEnd = key.substring(key.length - 4);
+    const maskedMiddle = "*".repeat(key.length - 16);
+
+    return `${visibleStart}${maskedMiddle}${visibleEnd}`;
   }, []);
 
   const handleCopyKey = useCallback((key: string) => {
@@ -258,7 +279,7 @@ const Api_credits = () => {
   }, []);
 
   const handleRevokeSelected = useCallback(
-    async (environments: "Live"[]) => {
+    async (environments: ("Live" | "Sandbox")[]) => {
       if (!loggedIn) return;
 
       try {
@@ -286,6 +307,10 @@ const Api_credits = () => {
           );
         });
 
+        // Clear the persisted flag since keys have been revoked
+        localStorage.removeItem("hasApiKey");
+        setHasExistingApiKey(false);
+
         setLastRevokedEnvs(environments);
         setModalStep(3);
       } catch (err) {
@@ -297,15 +322,21 @@ const Api_credits = () => {
   );
 
   const handleGenerateNewKey = useCallback(
-    async (environments: "Live"[] = ["Live"]) => {
+    async (environments: ("Live" | "Sandbox")[] = ["Live"]) => {
       if (!loggedIn || !getCookie("_tk")) return;
 
       try {
         const isRegenerating = apiKeys.length > 0;
         const promises: Promise<any>[] = [];
         const envOrder: ("Live" | "Sandbox")[] = [];
+        const newKeys: { key: string; type: string; revoked?: boolean }[] = [];
 
-        for (const env of environments) {
+        // Separate Live and Sandbox environments
+        const liveEnvs = environments.filter((env) => env === "Live");
+        const sandboxEnvs = environments.filter((env) => env === "Sandbox");
+
+        // Handle Live keys from backend
+        for (const env of liveEnvs) {
           envOrder.push(env);
           promises.push(
             isRegenerating
@@ -314,30 +345,72 @@ const Api_credits = () => {
           );
         }
 
-        const results = await Promise.all(promises as Promise<any>[]);
-        const newKeys: { key: string; type: string; revoked?: boolean }[] = [];
+        // Generate Sandbox keys on frontend
+        sandboxEnvs.forEach(() => {
+          // Generate a mock sandbox key in format: sk-test_{8-hex}_{32-alphanumeric}
+          const generateHex = (length: number) => {
+            let result = "";
+            const characters = "0123456789abcdef";
+            for (let i = 0; i < length; i++) {
+              result += characters.charAt(
+                Math.floor(Math.random() * characters.length),
+              );
+            }
+            return result;
+          };
 
-        for (let i = 0; i < results.length; i++) {
-          const res = results[i];
-          if (!res.error && res.data?.status && res.data?.data?.apiKey) {
-            newKeys.push({
-              key: res.data.data.apiKey,
-              type: `${envOrder[i]} Key`,
-              revoked: false,
-            });
-          } else {
-            // Show API error message if present
-            const message =
-              res?.data?.message ||
-              res?.error?.data?.message ||
-              res?.error?.message;
-            if (message) toast.error(message);
+          const generateAlphanumeric = (length: number) => {
+            let result = "";
+            const characters =
+              "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            for (let i = 0; i < length; i++) {
+              result += characters.charAt(
+                Math.floor(Math.random() * characters.length),
+              );
+            }
+            return result;
+          };
+
+          const hexPart = generateHex(8);
+          const alphaPart = generateAlphanumeric(32);
+          const mockSandboxKey = `sk-test_${hexPart}_${alphaPart}`;
+
+          newKeys.push({
+            key: mockSandboxKey,
+            type: "Test Key",
+            revoked: false,
+          });
+        });
+
+        // Process backend results for Live keys
+        if (promises.length > 0) {
+          const results = await Promise.all(promises as Promise<any>[]);
+
+          for (let i = 0; i < results.length; i++) {
+            const res = results[i];
+            if (!res.error && res.data?.status && res.data?.data?.apiKey) {
+              newKeys.push({
+                key: res.data.data.apiKey,
+                type: `${envOrder[i]} Key`,
+                revoked: false,
+              });
+            } else {
+              // Show API error message if present
+              const message =
+                res?.data?.message ||
+                res?.error?.data?.message ||
+                res?.error?.message;
+              if (message) toast.error(message);
+            }
           }
         }
 
         if (newKeys.length > 0) {
           setApiKeys(newKeys);
           setLastGeneratedKeys(newKeys);
+          // Persist flag so we can show "hidden" state after reload
+          localStorage.setItem("hasApiKey", "true");
+          setHasExistingApiKey(true);
           setModalStep(3);
         }
       } catch (error) {
@@ -362,15 +435,17 @@ const Api_credits = () => {
   const handleModalNext = useCallback(() => setModalStep(2), []);
 
   const handleModalGenerateKey = useCallback(async () => {
-    const envs: "Live"[] = [];
+    const envs: ("Live" | "Sandbox")[] = [];
     if (selectedEnvs.Live) envs.push("Live");
+    if (selectedEnvs.Sandbox) envs.push("Sandbox");
     if (envs.length === 0) return;
     await handleGenerateNewKey(envs);
   }, [selectedEnvs, handleGenerateNewKey]);
 
   const handleModalRevokeKey = useCallback(async () => {
-    const envs: "Live"[] = [];
+    const envs: ("Live" | "Sandbox")[] = [];
     if (selectedEnvs.Live) envs.push("Live");
+    if (selectedEnvs.Sandbox) envs.push("Sandbox");
     if (envs.length === 0) return;
     await handleRevokeSelected(envs);
   }, [selectedEnvs, handleRevokeSelected]);
@@ -383,15 +458,6 @@ const Api_credits = () => {
     ],
     [analytics?.creditsConsumed, analytics?.creditsPurchased],
   );
-
-  // const chartMax = useMemo(
-  //   () =>
-  //     Math.max(
-  //       analytics?.creditsPurchased || 0,
-  //       analytics?.creditsConsumed || 0,
-  //     ) || 10,
-  //   [analytics?.creditsConsumed, analytics?.creditsPurchased],
-  // );
 
   // Dashboard status (approval counts)
   const { dashboardData } = useDashboardStatus();
@@ -559,16 +625,39 @@ const Api_credits = () => {
                   ) : (
                     <div className="flex flex-col gap-5 w-full">
                       {apiKeys.length === 0 ? (
-                        <div className="flex items-center justify-center py-8 text-gray-400">
-                          <p className="text-sm">No API keys generated yet</p>
-                        </div>
+                        hasExistingApiKey ? (
+                          // Key was generated before but isn't in memory (e.g. after page reload)
+                          <div className="flex flex-col items-center justify-center gap-3 py-10 px-6 bg-[#fafbfe] rounded-xl border border-dashed border-[#cbd5ff]">
+                            <div className="text-3xl">🔑</div>
+                            <div className="flex flex-col items-center gap-1 text-center">
+                              <p className="text-sm font-medium text-gray-800 [font-family:'Archivo',Helvetica]">
+                                You have an active API key
+                              </p>
+                              <p className="text-xs text-gray-400 [font-family:'Archivo',Helvetica]">
+                                It's hidden for security. Use{" "}
+                                <span className="font-semibold text-gray-500">
+                                  Revoke key
+                                </span>{" "}
+                                to revoke and generate a fresh one.
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          // Truly no key has ever been generated
+                          <div className="flex items-center justify-center py-8 text-gray-400">
+                            <p className="text-sm">No API keys generated yet</p>
+                          </div>
+                        )
                       ) : (
                         apiKeys.map((keyObj, index) => (
                           <ApiKeyCard
                             key={index}
-                            keyObj={keyObj}
+                            keyObj={{
+                              ...keyObj,
+                              key: maskApiKey(keyObj.key),
+                            }}
                             index={index}
-                            onCopy={handleCopyKey}
+                            onCopy={() => handleCopyKey(keyObj.key)}
                           />
                         ))
                       )}
@@ -630,6 +719,13 @@ const Api_credits = () => {
                     open={showBuyCreditsModal}
                     onClose={closeBuyCreditsModal}
                     onShowTransactions={openTransactions}
+                    onPaymentSuccess={() => {
+                      try {
+                        refetchCredits?.();
+                      } catch (e) {
+                        // ignore
+                      }
+                    }}
                   />
                 </Suspense>
               )}

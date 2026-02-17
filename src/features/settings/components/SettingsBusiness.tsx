@@ -119,10 +119,21 @@ const SettingsBusiness = () => {
   };
 
   useEffect(() => {
-    const path = location.pathname.replace(`${APP_PATHS.SETTINGS}/`, "");
-    if (!path || path === "" || path === "business-profile")
+    const base = APP_PATHS.SETTINGS;
+    let path = "";
+    if (location.pathname === base || location.pathname === `${base}/`) {
+      path = "";
+    } else if (location.pathname.startsWith(`${base}/`)) {
+      path = location.pathname.slice(`${base}/`.length);
+    } else {
+      path = location.pathname;
+    }
+
+    if (!path || path === "" || path === "business-profile") {
       setActiveTab("business-profile");
-    else setActiveTab(path);
+    } else {
+      setActiveTab(path);
+    }
   }, [location.pathname]);
 
   // Helper: fetch latest profile data
