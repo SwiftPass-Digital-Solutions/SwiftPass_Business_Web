@@ -127,6 +127,23 @@ const SettingsPrivacy = () => {
     }
   };
 
+  const handleLogout = () => {
+    // Clear the _tk cookie
+    document.cookie =
+      "_tk=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=." +
+      window.location.hostname.split(".").slice(-2).join(".");
+
+    // Clear localStorage and sessionStorage
+    localStorage.clear();
+    sessionStorage.clear();
+
+    // Show success message
+    toast.success("Logged out successfully");
+
+    // Redirect to login or home page
+    navigate("/"); // Update this path to your login route
+  };
+
   return (
     <div
       className="w-full min-w-0 max-w-full box-border"
@@ -261,7 +278,10 @@ const SettingsPrivacy = () => {
                   Want to log out?
                 </div>
 
-                <button className="inline-flex items-center justify-center gap-1 px-3 py-2 md:py-1.5 relative flex-shrink-0 bg-[#ffefef] rounded-md border border-solid border-primitives-red-red-50">
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center justify-center gap-1 px-3 py-2 md:py-1.5 relative flex-shrink-0 bg-[#ffefef] rounded-md border border-solid border-primitives-red-red-50"
+                >
                   <img
                     className="relative w-3.5 h-3.5 aspect-[1] flex-shrink-0"
                     alt="Log out icon"
