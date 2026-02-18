@@ -128,10 +128,12 @@ const SettingsPrivacy = () => {
   };
 
   const handleLogout = () => {
-    // Clear the _tk cookie
-    document.cookie =
-      "_tk=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=." +
-      window.location.hostname.split(".").slice(-2).join(".");
+    // Clear all cookies at once
+    document.cookie.split(";").forEach((c) => {
+      document.cookie = c
+        .replace(/^ +/, "")
+        .replace(/=.*/, "=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/");
+    });
 
     // Clear localStorage and sessionStorage
     localStorage.clear();
@@ -141,7 +143,7 @@ const SettingsPrivacy = () => {
     toast.success("Logged out successfully");
 
     // Redirect to login or home page
-    navigate("/"); // Update this path to your login route
+    navigate("/");
   };
 
   return (
