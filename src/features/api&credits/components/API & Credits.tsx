@@ -157,7 +157,12 @@ const Api_credits = () => {
         ?.map((item: RecentCreditHistoryItem) => ({
           date: new Date(item.createdAt).toLocaleDateString(),
           action: item.transactionType,
-          credits: item.credits.toString(),
+          credits:
+            item.transactionType === "Usage"
+              ? `${item.credits}`
+              : item.transactionType === "Buy"
+                ? `+${item.credits}`
+                : item.credits.toString(),
           balance: item.balanceAfter.toString(),
         })) || []
     );
