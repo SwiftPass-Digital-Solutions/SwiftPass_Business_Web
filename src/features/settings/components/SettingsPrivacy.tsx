@@ -273,24 +273,28 @@ const SettingsPrivacy = () => {
                 <hr className="relative w-full h-px mt-[-1.00px] border-0 bg-[url(https://c.animaapp.com/nHRrOw7w/img/line-21.svg)] bg-cover" />
               </div>
 
-              <div className="flex flex-row items-center justify-between gap-3 pt-4 md:pt-6 pb-4 px-0 relative w-full min-w-0 border-t border-gray-100 md:border-t-0 box-border">
-                <div className="relative flex items-center justify-start md:justify-center flex-shrink-0 [font-family:'Archivo',Helvetica] font-normal text-[#666666] md:text-textblacksecondary text-[13px] md:text-sm tracking-[-0.42px] leading-[normal]">
+              <div className="flex md:flex-row md:items-center md:gap-[204px] px-0 pt-4 md:pt-6 pb-4 relative self-stretch w-full flex-[0_0_auto] border-t border-gray-100 md:border-t-0 box-border">
+                <div className="relative flex items-start md:items-center justify-start md:justify-center w-full md:w-40 flex-shrink-0 [font-family:'Archivo',Helvetica] font-normal text-[#666666] md:text-textblacksecondary text-[13px] md:text-sm tracking-[-0.42px] leading-[normal]">
                   Want to log out?
                 </div>
 
-                <button
-                  onClick={handleLogout}
-                  className="inline-flex items-center justify-center gap-1 px-3 py-2 md:py-1.5 relative flex-shrink-0 bg-[#ffefef] rounded-md border border-solid border-primitives-red-red-50"
-                >
-                  <img
-                    className="relative w-3.5 h-3.5 aspect-[1] flex-shrink-0"
-                    alt="Log out icon"
-                    src="https://c.animaapp.com/nHRrOw7w/img/button-icon.svg"
-                  />
-                  <span className="relative flex items-center justify-center w-fit mt-[-0.50px] [font-family:'Archivo',Helvetica] font-normal text-primitives-red-red-500 text-[13px] md:text-xs text-center tracking-[-0.36px] leading-[normal] whitespace-nowrap">
-                    Log out of SwiftPass
-                  </span>
-                </button>
+                <div className="flex w-full items-center justify-end md:justify-between relative min-w-0 box-border">
+                  <div>
+                    <button
+                      onClick={handleLogout}
+                      className="inline-flex items-center justify-center gap-1 px-3 py-2 md:py-1.5 relative flex-shrink-0 bg-[#ffefef] rounded-md border border-solid border-primitives-red-red-50"
+                    >
+                      <img
+                        className="relative w-3.5 h-3.5 aspect-[1] flex-shrink-0"
+                        alt="Log out icon"
+                        src="https://c.animaapp.com/nHRrOw7w/img/button-icon.svg"
+                      />
+                      <span className="relative flex items-center justify-center w-fit mt-[-0.50px] [font-family:'Archivo',Helvetica] font-normal text-primitives-red-red-500 text-[13px] md:text-xs text-center tracking-[-0.36px] leading-[normal] whitespace-nowrap">
+                        Log out of SwiftPass
+                      </span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
