@@ -491,7 +491,7 @@ const Api_credits = () => {
     <>
       {isLoading && <PageLoader />}
 
-      <div className="w-full max-w-full overflow-x-hidden px-4 sm:px-0">
+      <div className="w-full max-w-full overflow-x-hidden">
         {/* Only render content when data is ready AND chart is rendered */}
         {!isLoading && (
           <>
