@@ -41,6 +41,8 @@ declare global {
  * Dynamically injects the Paystack inline script once.
  * Resolves immediately if already loaded.
  */
+const PAYSTACK_SCRIPT_URL = "https://js.paystack.co/v1/inline.js";
+
 const loadPaystackScript = (): Promise<void> =>
   new Promise((resolve, reject) => {
     if (typeof window !== "undefined" && window.PaystackPop) {
@@ -49,7 +51,7 @@ const loadPaystackScript = (): Promise<void> =>
     }
     // Avoid double-injection
     const existing = document.querySelector(
-      'script[src="https://js.paystack.co/v1/inline.js"]',
+      `script[src="${PAYSTACK_SCRIPT_URL}"]`,
     );
     if (existing) {
       existing.addEventListener("load", () => resolve());
@@ -59,7 +61,7 @@ const loadPaystackScript = (): Promise<void> =>
       return;
     }
     const script = document.createElement("script");
-    script.src = "https://js.paystack.co/v1/inline.js";
+    script.src = PAYSTACK_SCRIPT_URL;
     script.async = true;
     script.onload = () => resolve();
     script.onerror = () =>
@@ -331,6 +333,84 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
         idx === 0 ? "#fcfcfc" : idx === 1 ? "#f0f7fd" : "#fff4f4",
     }));
   }, [packagesResponse]);
+  const verifyPayment = useCallback(
+    async (reference: string): Promise<boolean> => {
+      try {
+        const baseUrl = import.meta.env.VITE_API_URL;
+        const token = getCookie("token");
+        const res = await fetch(
+          `${baseUrl}/payments/verify?trxref=${reference}&reference=${reference}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        const json = await res.json();
+        if (!res.ok || json?.status === false) {
+          toast.error(json?.message || "Payment verification failed");
+          return false;
+        }
+
+        try {
+          onPaymentSuccess?.();
+        } catch (e) {
+          // ignore
+        }
+
+        return true;
+      } catch {
+        toast.error("Could not verify payment. Please contact support.");
+        return false;
+      }
+    },
+    [onPaymentSuccess],
+  );
+
+  const openPaystackPopup = useCallback(
+    (opts: {
+      publicKey: string;
+      email?: string;
+      amountKobo: number;
+      accessCode?: string;
+      ref?: string;
+      transactionReference: string;
+    }): Promise<boolean> =>
+      new Promise((resolve) => {
+        const handler = window.PaystackPop.setup({
+          key: opts.publicKey,
+          email: opts.email,
+          amount: opts.amountKobo,
+          access_code: opts.accessCode,
+          ref: opts.ref || opts.transactionReference,
+          currency: "NGN",
+          callback: () => {
+            verifyPayment(opts.transactionReference).then(resolve);
+          },
+          onClose: () => {
+            toast.info("Payment cancelled");
+            resolve(false);
+          },
+        });
+        handler.openIframe();
+      }),
+    [verifyPayment],
+  );
+
+  const getAmountKobo = useCallback(
+    (pkgId: number | null): number => {
+      const pkgForAmount = creditPackages.find((p) => p.id === pkgId);
+      const amountNaira = pkgForAmount
+        ? Number(String(pkgForAmount.price).replace(/[₦,]/g, ""))
+        : showCustomAmount
+          ? Number(customAmount) || 0
+          : 0;
+      return amountNaira * 100;
+    },
+    [creditPackages, showCustomAmount, customAmount],
+  );
 
   const handleBuyCredits = useCallback(async (): Promise<boolean> => {
     const payload = showCustomAmount
@@ -367,94 +447,43 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
       const publicKey: string =
         data.publicKey || import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || "";
 
-      // Amount in kobo
-      const pkgForAmount = creditPackages.find((p) => p.id === selectedPackage);
-      const amountNaira = pkgForAmount
-        ? Number(String(pkgForAmount.price).replace(/[₦,]/g, ""))
-        : showCustomAmount
-          ? Number(customAmount) || 0
-          : 0;
-      const amountKobo = amountNaira * 100;
+      const amountKobo = getAmountKobo(selectedPackage);
 
-      const verifyPayment = async (reference: string): Promise<boolean> => {
-        try {
-          const baseUrl = import.meta.env.VITE_API_URL;
-          const token = getCookie("token");
-          const res = await fetch(
-            `${baseUrl}/payments/verify?trxref=${reference}&reference=${reference}`,
-            {
-              method: "GET",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-          const json = await res.json();
-          if (!res.ok || json?.status === false) {
-            toast.error(json?.message || "Payment verification failed");
-            return false;
-          }
-          return true;
-        } catch {
-          toast.error("Could not verify payment. Please contact support.");
-          return false;
-        }
-      };
-
-      const openWithAccessCode = (code: string): Promise<boolean> =>
-        new Promise((resolve) => {
-          const handler = window.PaystackPop.setup({
-            key: publicKey,
-            email: userEmail,
-            amount: amountKobo,
-            access_code: code,
-            callback: (_response: { reference: string; trxref: string }) => {
-              // ✅ Use the reference from your buy API instead of Paystack's response
-              verifyPayment(transactionReference).then(resolve);
-            },
-            onClose: () => {
-              toast.info("Payment cancelled");
-              resolve(false);
-            },
-          });
-          handler.openIframe();
-        });
-
-      // ── Strategy 1: access code already in response body ──────────────────
+      // Strategy 1: access code already in response body
       const directAccessCode: string | null = data.accessCode ?? null;
       if (directAccessCode && publicKey) {
-        return openWithAccessCode(directAccessCode);
+        return openPaystackPopup({
+          publicKey,
+          email: userEmail,
+          amountKobo,
+          accessCode: directAccessCode,
+          transactionReference,
+        });
       }
 
-      // ── Strategy 2: extract access code from checkoutUrl ──────────────────
+      // Strategy 2: extract access code from checkoutUrl
       const checkoutUrl: string = data.checkoutUrl || data.redirectUrl || "";
       if (checkoutUrl) {
         const codeFromUrl = extractAccessCode(checkoutUrl);
         if (codeFromUrl && publicKey) {
-          return openWithAccessCode(codeFromUrl);
+          return openPaystackPopup({
+            publicKey,
+            email: userEmail,
+            amountKobo,
+            accessCode: codeFromUrl,
+            transactionReference,
+          });
         }
       }
 
-      // ── Strategy 3: v1 setup with explicit params ─────────────────────────
+      // Strategy 3: v1 setup with explicit params
       if (publicKey && data.email && data.amount) {
-        return new Promise<boolean>((resolve) => {
-          const handler = window.PaystackPop.setup({
-            key: publicKey,
-            email: data.email,
-            amount: Number(data.amount), // kobo
-            ref: data.reference,
-            currency: "NGN",
-            callback: (_response: { reference: string; trxref: string }) => {
-              // ✅ Use the reference from your buy API
-              verifyPayment(transactionReference).then(resolve);
-            },
-            onClose: () => {
-              toast.info("Payment window closed");
-              resolve(false);
-            },
-          });
-          handler.openIframe();
+        return openPaystackPopup({
+          publicKey,
+          email: data.email,
+          amountKobo: Number(data.amount), // kobo
+          ref: data.reference,
+          transactionReference,
         });
       }
 
@@ -477,7 +506,8 @@ const BuyCreditsModal: React.FC<BuyCreditsModalProps> = ({
     selectedPackage,
     buyCredits,
     userEmail,
-    creditPackages,
+    getAmountKobo,
+    openPaystackPopup,
   ]);
 
   useEffect(() => {

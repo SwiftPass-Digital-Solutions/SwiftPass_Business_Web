@@ -1,5 +1,16 @@
 import React from "react";
 
+// Utility function to mask API keys
+const maskApiKey = (key: string): string => {
+  if (!key || key.length <= 16) return key;
+
+  const visibleStart = key.substring(0, 12);
+  const visibleEnd = key.substring(key.length - 4);
+  const maskedMiddle = "*".repeat(key.length - 16);
+
+  return `${visibleStart}${maskedMiddle}${visibleEnd}`;
+};
+
 const GenerateModal = React.memo(
   ({
     showGenerateModal,
@@ -68,6 +79,20 @@ const GenerateModal = React.memo(
                       aria-label="Live Key (for production use)"
                     />
                   </label>
+                  {modalMode !== "revoke" && (
+                    <label className="flex items-center justify-between p-3 w-full bg-[#f5f5f5] rounded-xl border border-solid border-[#dcdcdc] cursor-pointer hover:bg-[#eeeeee] transition-colors">
+                      <span className="[font-family:'Archivo',Helvetica] font-normal text-black text-base tracking-[0] leading-[23.2px] whitespace-nowrap">
+                        Sandbox Key (for testing)
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={selectedEnvs.Sandbox}
+                        onChange={() => onToggleEnv("Sandbox")}
+                        className="w-5 h-5 cursor-pointer accent-green-600"
+                        aria-label="Sandbox Key (for testing)"
+                      />
+                    </label>
+                  )}
                 </fieldset>
 
                 <div className="flex flex-col-reverse w-full gap-3 sm:flex-row sm:w-[411px] sm:items-start sm:flex-[0_0_auto] relative">
@@ -85,9 +110,9 @@ const GenerateModal = React.memo(
                   <button
                     type="button"
                     onClick={onNext}
-                    disabled={!selectedEnvs.Live}
+                    disabled={!(selectedEnvs.Live || selectedEnvs.Sandbox)}
                     className={`flex items-center justify-center gap-2.5 p-4 flex-1 rounded-xl border border-solid transition-colors active:shadow-none active:translate-y-1 ${
-                      selectedEnvs.Live
+                      selectedEnvs.Live || selectedEnvs.Sandbox
                         ? "bg-blue-600 border-blue-600 shadow-[0px_4px_0px_#0844c4] cursor-pointer hover:bg-blue-700"
                         : "bg-transparent border-[#dcdcdc] cursor-not-allowed opacity-50"
                     }`}
@@ -95,7 +120,9 @@ const GenerateModal = React.memo(
                   >
                     <span
                       className={`[font-family:'Archivo',Helvetica] font-medium text-base tracking-[0] leading-[23.2px] whitespace-nowrap ${
-                        selectedEnvs.Live ? "text-white" : "text-[#4a4a4a]"
+                        selectedEnvs.Live || selectedEnvs.Sandbox
+                          ? "text-white"
+                          : "text-[#4a4a4a]"
                       }`}
                     >
                       Next
@@ -115,9 +142,19 @@ const GenerateModal = React.memo(
                       </h2>
 
                       <p className="[font-family:'Archivo',Helvetica] font-normal text-[#6b7280] text-xs text-center tracking-[0] leading-[17.4px]">
-                        {selectedEnvs.Live
-                          ? `You are about to generate a new Live API key. For security, old keys remain active until you revoke them.`
-                          : ""}
+                        {selectedEnvs.Live && (
+                          <span>
+                            You are about to generate a new Live API key. For
+                            security, old keys remain active until you revoke
+                            them.
+                          </span>
+                        )}
+                        {selectedEnvs.Sandbox && (
+                          <span>
+                            {selectedEnvs.Live ? " " : ""}You are about to
+                            generate a new Sandbox API key for testing.
+                          </span>
+                        )}
                       </p>
                     </div>
 
@@ -143,7 +180,9 @@ const GenerateModal = React.memo(
                         <span className="[font-family:'Archivo',Helvetica] font-medium text-white text-base tracking-[0] leading-[23.2px] whitespace-nowrap">
                           {isGenerating || isRegenerating
                             ? "Generating..."
-                            : "Generate key"}
+                            : selectedEnvs.Sandbox && !selectedEnvs.Live
+                              ? "Generate test key"
+                              : "Generate key"}
                         </span>
                       </button>
                     </div>
@@ -216,7 +255,7 @@ const GenerateModal = React.memo(
                           className="flex items-center justify-between gap-3 p-4 w-full bg-[#f5f5f5] rounded-xl border border-solid border-[#dcdcdc]"
                         >
                           <code className="[font-family:'Archivo',Helvetica] font-medium text-black text-sm tracking-[0] leading-[20px] break-all flex-1 overflow-hidden">
-                            {k.key}
+                            {maskApiKey(k.key)}
                           </code>
                           <button
                             onClick={() => onCopyKey(k.key)}
