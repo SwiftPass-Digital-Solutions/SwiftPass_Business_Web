@@ -25,7 +25,7 @@ const Otp = () => {
   const [triggerResend, { isLoading: resendLoading }] = useResendOtpMutation();
 
   const [trackingId, setTrackingId] = useState<string | undefined>(
-    state?.trackingId
+    state?.trackingId,
   );
 
   const {
@@ -94,7 +94,7 @@ const Otp = () => {
   return (
     <div className="w-full h-screen grid grid-cols-1 md:grid-cols-6 font-archivo overflow-hidden">
       <div className="col-span-2 h-screen flex flex-col md:justify-center w-full mx-auto py-7 md:pl-20 md:pr-0 pl-4 pr-4 bg-white rounded-2xl text-[#555555]">
-        <SwiftPassLogo />
+        <SwiftPassLogo className="w-50 h-auto" />
 
         <div className="space-y-1 mt-8">
           <h3 className="text-2xl font-normal text-black">Enter OTP</h3>
