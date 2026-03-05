@@ -77,7 +77,7 @@ const SidebarContent: React.FC<{
                 isOpen ? "mx-8" : "ml-5"
               } mt-7 items-center gap-2 justify-center h-10`}
             >
-              <SwiftPassLogo width={55} height={47} />
+              <SwiftPassLogo className="w-50 h-auto" />
             </div>
           </Link>
           <div className="hidden md:flex items-center gap-5 ml-auto">
