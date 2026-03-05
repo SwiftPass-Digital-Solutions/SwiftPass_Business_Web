@@ -68,7 +68,7 @@ const UploadDocs = () => {
         pathname: location.pathname,
         search: `?step=${nextStep}`,
       },
-      { replace: true, state: { ...state } }
+      { replace: true, state: { ...state } },
     );
   };
 
@@ -91,7 +91,7 @@ const UploadDocs = () => {
           label: subcategory?.subCategoryDisplayName,
           value: subcategory?.subCategoryId,
         })) ?? [],
-    [currentCategory, businessCategories]
+    [currentCategory, businessCategories],
   );
 
   const persistedValues = useMemo(() => {
@@ -166,7 +166,7 @@ const UploadDocs = () => {
 
   useEffect(() => {
     const missingStep = STEPS.findIndex(
-      (step, index) => index < stepIndex && !formik.values[step.key]
+      (step, index) => index < stepIndex && !formik.values[step.key],
     );
 
     if (missingStep !== -1) {
@@ -177,7 +177,7 @@ const UploadDocs = () => {
   return (
     <div className="w-full h-screen grid grid-cols-1 md:grid-cols-6 font-archivo overflow-hidden">
       <div className="col-span-2 h-full overflow-y-auto w-full mx-auto py-7 md:pl-20 md:pr-0 pl-4 pr-4 bg-white rounded-2xl text-[#555555]">
-        <SwiftPassLogo className="shrink-0" />
+        <SwiftPassLogo className="shrink-0 w-50 h-auto" />
 
         <div className="space-y-1 mt-8">
           <h3 className="text-2xl font-normal">Upload Required Documents</h3>

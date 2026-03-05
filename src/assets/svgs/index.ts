@@ -19,7 +19,8 @@ import WhiteX from "./whitex.svg?react";
 import Edit from "./edit.svg?react";
 import Delete from "./delete.svg?react";
 import View from "./view.svg?react";
-import SwiftPassLogo from "./swiftpass-logo.svg?react";
+import SwiftPassLogos from "./Iconmark.svg?react";
+import SwiftPassLogo from "./Logo.svg?react";
 import Dashboard from "./home.svg?react";
 import Reports from "./reports.svg?react";
 import Settings from "./settings.svg?react";
@@ -52,6 +53,7 @@ export {
   Delete,
   View,
   SwiftPassLogo,
+  SwiftPassLogos,
   Compliance,
   Customers,
   Dashboard,

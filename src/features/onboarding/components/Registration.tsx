@@ -63,7 +63,7 @@ const Registration = () => {
       {loading && <PageLoader />}
       <div className="w-full h-screen grid grid-cols-1 md:grid-cols-5 font-archivo overflow-hidden">
         <div className="col-span-2 h-full overflow-y-auto w-full mx-auto py-7 md:pl-20 md:pr-0 pl-4 pr-4 bg-white rounded-2xl text-[#555555]">
-          <SwiftPassLogo className="shrink-0" />
+          <SwiftPassLogo className="shrink-0 w-50 h-auto" />
 
           <div className="space-y-1 mt-8">
             <h3 className="text-2xl font-normal">Welcome to SwiftPass</h3>
