@@ -43,7 +43,7 @@ const SidebarContent: React.FC<{
 
   const handleToggleSidebar = useCallback(
     () => dispatch(toggleSideBar()),
-    [dispatch]
+    [dispatch],
   );
 
   // const handleLogout = useCallback(async () => {
@@ -75,9 +75,9 @@ const SidebarContent: React.FC<{
             <div
               className={`flex  ${
                 isOpen ? "mx-8" : "ml-5"
-              } mt-7 items-center gap-2 justify-center h-10`}
+              } mt-7 items-center gap-2 justify-center`}
             >
-              <SwiftPassLogo width={40} height={32} />
+              <SwiftPassLogo className="w-50 h-auto" />
             </div>
           </Link>
           <div className="hidden md:flex items-center gap-5 ml-auto">
@@ -124,16 +124,16 @@ const SidebarContent: React.FC<{
             </div>
             <h3 className="text-lg font-medium">{businessName}</h3>
             <p>{email}</p>
-              {showUploadButton && (
-                <div className="mt-4">
-                  <Button
-                    variant="outlined"
-                    text="Upload documents"
-                    onClick={() => navigate(APP_PATHS.COMPLIANCE)}
-                    textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
-                  />
-                </div>
-              )}
+            {showUploadButton && (
+              <div className="mt-4">
+                <Button
+                  variant="outlined"
+                  text="Upload documents"
+                  onClick={() => navigate(APP_PATHS.COMPLIANCE)}
+                  textClass="text-xs! whitespace-nowrap text-primary! font-medium!"
+                />
+              </div>
+            )}
           </div>
         </div>
       </motion.div>

@@ -1,4 +1,4 @@
-import { SwiftPassLogo } from "@/assets/svgs";
+import { SwiftPassLogos } from "@/assets/svgs";
 import { useEffect } from "react";
 
 const PageLoader = ({
@@ -48,8 +48,13 @@ const PageLoader = ({
             } animate-spin max-w-full max-h-full bg-white border-[#CECECE] rounded-full`}
           />
           <div className="flex items-center justify-center animate-pulse absolute max-w-full max-h-full">
-            <SwiftPassLogo
-              className={showMessage ? "scale-[45%]" : "scale-[70%]"}
+            <SwiftPassLogos
+              className={
+                showMessage
+                  ? "scale-[45%] w-20 h-auto"
+                  : "scale-[70%] w-20 h-auto"
+              }
+
               // alt="logo"
             />
           </div>
