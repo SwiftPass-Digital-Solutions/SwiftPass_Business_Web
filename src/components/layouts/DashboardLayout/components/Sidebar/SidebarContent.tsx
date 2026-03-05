@@ -75,7 +75,7 @@ const SidebarContent: React.FC<{
             <div
               className={`flex  ${
                 isOpen ? "mx-8" : "ml-5"
-              } mt-7 items-center gap-2 justify-center h-10`}
+              } mt-7 items-center gap-2 justify-center`}
             >
               <SwiftPassLogo className="w-50 h-auto" />
             </div>
