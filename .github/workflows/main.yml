@@ -1,0 +1,93 @@
+name: Build and Deploy Web Admin
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "Dockerfile"
+      - "vite.config.*"
+      - "tsconfig*.json"
+      - ".github/workflows/docker-build.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: swiftpass-web-admin
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest
+            type=sha
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          no-cache: true
+          build-args: |
+            VITE_REDUX_SECRET_KEY=${{ secrets.VITE_REDUX_SECRET_KEY }}
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_PAYSTACK_PUBLIC_KEY=${{ secrets.VITE_PAYSTACK_PUBLIC_KEY }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=swiftpass-web-admin
+          cache-to: type=gha,mode=max,scope=swiftpass-web-admin
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.2
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/swiftpass
+            echo "Pulling latest web-admin image..."
+            docker compose pull web-admin
+            echo "Recreating web-admin container..."
+            docker compose up -d --no-deps web-admin
+            echo "Checking container status..."
+            docker compose ps
+            echo "Showing recent logs..."
+            docker compose logs web-admin --tail=20
+            echo "Cleaning up old images..."
+            docker image prune -f
+
+      - name: Cleanup old GHCR images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: swiftpass-web-admin
+          package-type: container
+          min-versions-to-keep: 3
+          delete-only-untagged-versions: false
+          token: ${{ secrets.GITHUB_TOKEN }}
