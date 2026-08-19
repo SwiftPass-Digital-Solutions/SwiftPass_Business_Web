@@ -466,7 +466,22 @@ const Api_credits = () => {
 
   // Dashboard status (approval counts)
   const { dashboardData } = useDashboardStatus();
-  const approvedDocumentsCount = dashboardData?.approvedDocumentsCount ?? 0;
+
+  const isKycApproved = useMemo(() => {
+    if (!dashboardData) return false;
+
+    return (
+      dashboardData.status === "Completed" &&
+      dashboardData.isEmailConfirmed === true &&
+      dashboardData.hasSetPassword === true &&
+      dashboardData.hasUploadedDocuments === true &&
+      dashboardData.pendingDocumentsCount === 0 &&
+      dashboardData.rejectedDocumentsCount === 0 &&
+      dashboardData.approvedDocumentsCount ===
+        dashboardData.documentsUploadedCount &&
+      dashboardData.documentsUploadedCount > 0
+    );
+  }, [dashboardData]);
 
   // Memoize history for modals to prevent re-renders
   const creditHistory = useMemo(
@@ -540,7 +555,7 @@ const Api_credits = () => {
                         API Keys &amp; Access
                       </h1>
 
-                      {approvedDocumentsCount === 4 && (
+                      {isKycApproved && (
                         <div
                           className="inline-flex justify-center gap-1.5 px-2 py-1 bg-[#effff2] rounded-[999px] items-center"
                           role="status"
@@ -560,12 +575,12 @@ const Api_credits = () => {
                     <div className="flex flex-row gap-2 items-center w-full sm:w-auto">
                       <button
                         className={`inline-flex flex-1 sm:flex-initial sm:w-auto justify-center gap-2.5 px-3 py-2.5 sm:p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
-                          approvedDocumentsCount !== 4
+                          !isKycApproved
                             ? "bg-gray-200 border-gray-300 text-gray-400 cursor-not-allowed"
                             : "bg-[#f0f0f0] border-[#dcdcdc] cursor-pointer hover:bg-[#f5f5f5] active:shadow-none active:translate-y-[2px]"
                         }`}
                         onClick={openRevokeModal}
-                        disabled={approvedDocumentsCount !== 4}
+                        disabled={!isKycApproved}
                         aria-label="Revoke API key"
                         type="button"
                       >
@@ -576,12 +591,12 @@ const Api_credits = () => {
 
                       <button
                         className={`inline-flex flex-1 sm:flex-initial sm:w-auto justify-center gap-2.5 px-3 py-2.5 sm:p-3 rounded-xl border border-solid shadow-[0px_2px_0px_#dcdcdc] items-center transition-all ${
-                          approvedDocumentsCount !== 4
+                          !isKycApproved
                             ? "bg-gray-300 border-gray-400 text-gray-500 cursor-not-allowed"
                             : "bg-[#0a51db] border-[#0844c4] cursor-pointer hover:bg-[#0a3fc9] active:shadow-none active:translate-y-[2px]"
                         }`}
                         onClick={openGenerateModal}
-                        disabled={approvedDocumentsCount !== 4}
+                        disabled={!isKycApproved}
                         aria-label={
                           apiKeys.length > 0
                             ? "Regenerate API key"
@@ -591,12 +606,10 @@ const Api_credits = () => {
                       >
                         <span
                           className={`[font-family:'Archivo',Helvetica] font-medium text-xs sm:text-sm tracking-[-0.42px] leading-[20.3px] whitespace-nowrap ${
-                            approvedDocumentsCount !== 4
-                              ? "text-gray-500"
-                              : "text-white"
+                            !isKycApproved ? "text-gray-500" : "text-white"
                           }`}
                         >
-                          {approvedDocumentsCount !== 4
+                          {!isKycApproved
                             ? "Generate new key"
                             : apiKeys.length > 0
                               ? "Regenerate new key"
@@ -606,7 +619,7 @@ const Api_credits = () => {
                     </div>
                   </header>
 
-                  {approvedDocumentsCount !== 4 ? (
+                  {!isKycApproved ? (
                     <div className="border-2 border-blue-500 rounded-lg bg-blue-50/30 p-8 sm:p-12">
                       <div className="flex flex-col items-center justify-center text-center">
                         {/* Blurred API Key */}
