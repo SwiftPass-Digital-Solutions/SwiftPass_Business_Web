@@ -72,6 +72,13 @@ const BillingCard = React.memo(({ row }: { row: BillingHistoryItem }) => (
 
 BillingCard.displayName = "BillingCard";
 
+const REQUIRED_CATEGORIES = [
+  "CorporateRegistration",
+  "TaxCompliance",
+  "DirectorId",
+] as const;
+// License is intentionally excluded — it's optional and does not block key generation
+
 // Memoize the chart component to prevent re-renders
 
 const Api_credits = () => {
@@ -466,22 +473,17 @@ const Api_credits = () => {
 
   // Dashboard status (approval counts)
   const { dashboardData } = useDashboardStatus();
-
   const isKycApproved = useMemo(() => {
-    if (!dashboardData) return false;
+    const docs = dashboardData?.uploadedDocuments;
+    if (!docs || docs.length === 0) return false;
 
-    return (
-      dashboardData.status === "Completed" &&
-      dashboardData.isEmailConfirmed === true &&
-      dashboardData.hasSetPassword === true &&
-      dashboardData.hasUploadedDocuments === true &&
-      dashboardData.pendingDocumentsCount === 0 &&
-      dashboardData.rejectedDocumentsCount === 0 &&
-      dashboardData.approvedDocumentsCount ===
-        dashboardData.documentsUploadedCount &&
-      dashboardData.documentsUploadedCount > 0
+    return REQUIRED_CATEGORIES.every((category) =>
+      docs.some(
+        (doc) =>
+          doc.category === category && doc.verificationStatus === "Approved",
+      ),
     );
-  }, [dashboardData]);
+  }, [dashboardData?.uploadedDocuments]);
 
   // Memoize history for modals to prevent re-renders
   const creditHistory = useMemo(
